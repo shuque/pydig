@@ -1,0 +1,24 @@
+Todo List (ie. things I might implement in the future)
+
+* do more Pythonic things
+  - re-architect to use more OOP classes
+  - use "warn" module to issue warnings
+  - return instance of an options class rather than a dictionary in 
+    parse_args()?
+  - breakup script into script and a module.py file
+
+* Implement +trace --> iterative resolution
+* Use some python module for better options parsing (which one?)
+* More graceful error messages in command line parsing - give
+  better feedback about exception raised
+* Make sure TSIG record in response is the last record in additional section
+* Decode old-style DNSSEC RR types: KEY, SIG, NXT
+* Support IDN
+* Try additional nameservers from /etc/resolv.conf if necessary
+* Support IXFR queries, by means of syntax 'ixfr=NNN'
+* Support SIG(0) channel security mechanism
+* Validate DNSSEC secured data via configured trust anchors
+* Decode DKIM
+* Implement DNSSEC validation
+
+--Shumon Huque

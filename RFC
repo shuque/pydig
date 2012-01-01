@@ -1,0 +1,56 @@
+Some DNS related RFCs
+
+1035	DOMAIN NAMES - IMPLEMENTATION AND SPECIFICATION
+1886	DNS Extensions to support IP version 6 (AAAA)
+1982	Serial Number Arithmetic
+2535	DNSSEC: Domain Name System Security Extensions
+2538	CERT RR:  Storing Certificates in the Domain Name System (DNS)
+2671	Extension Mechanisms for DNS (EDNS0)
+2672	Non-Terminal DNS Name Redirection (DNAME RR)
+2673	Binary Labels in the Domain Name System - Matt Crawford
+2782	A DNS RR for specifying the location of services (DNS SRV)
+2845	Secret Key Transaction Authentication for DNS (TSIG)
+2915	The Naming Authority Pointer (NAPTR) DNS Resource Record
+2930	Secret Key Establishment for DNS (TKEY RR)
+2931	DNS Request and Transaction Signatures ( SIG(0)s )
+3008	Domain Name System Security (DNSSEC) Signing Authority
+3110	RSA/SHA-1 SIGs and RSA KEYs in the Domain Name System (DNS)
+3225	Indicating Resolver Support of DNSSEC (DO bit - DNSSEC OK bit)
+3597	Handling of Unknown DNS Resource Record (RR) Types
+3645	Generic Security Service Algorithm for
+        Secret Key Transaction Authentication for DNS (GSS-TSIG)
+3655	Redefinition of DNS Authenticated Data (AD) bit
+3658	Delegation Signer (DS) Resource Record (RR)
+3958	Domain-Based Application Service Location Using SRV RRs and
+	the Dynamic Delegation Discover Service (DDDS)
+4025	A Method for Storing IPsec Keying Material in DNS (IPSECKEY RR)
+4027	Domain Name System Media Types
+4033	DNS Security Introduction and Requirements
+4034	Resource Records for the DNS Security Extensions
+4035	Protocol Modifications for the DNS Security Extensions
+4183	A Suggested Scheme for DNS Resolution of Networks and Gateways
+4255	Using DNS to Securely Publish Secure Shell (SSH) Key Fingerprints
+4290	Suggested Practices for Registration of
+                    Internationalized Domain Names (IDN)
+4310	Domain Name System (DNS) Security Extensions Mapping
+             for the Extensible Provisioning Protocol (EPP)
+4322	Opportunistic Encryption using the Internet Key Exchange (IKE)
+4339	IPv6 Host Configuration of DNS Server Information Approaches
+4343	Domain Name System (DNS) Case Insensitivity Clarification
+4367	What's in a Name: False Assumptions about DNS Name	IAB
+4398	Storing Certificates in the Domain Name System (DNS)
+4408	Sender Policy Framework (SPF) version 1
+4431	The DNSSEC Lookaside Validation (DLV) DNS Resource Record
+4470	Minimally Covering NSEC Records and DNSSEC On-line Signing
+4501	Domain Name System Uniform Resource  Identifiers
+4509	Use of SHA-256 in DNSSEC 
+                    Delegation Signer (DS) Resource Records (RRs)
+4592	The Role of Wildcards in the DNS
+4635	HMAC SHA TSIG Algorithm Identifiers
+4641	DNSSEC Operational Practices
+4690	Review and Recommendations for Internationalized 
+                    Domain Names (IDNs)
+4701	A DNS Resource Record (RR) for Encoding
+	   Dynamic Host Configuration Protocol (DHCP) Information (DHCID RR)
+4795	Link-local Multicast Name Resolution (LLMNR) (info.)
+5155	DNS Security (DNSSEC) Hashed Authenticated Denial of Existence
