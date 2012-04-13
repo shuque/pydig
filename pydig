@@ -26,7 +26,7 @@ import os, sys, socket, struct, time, string, base64, hashlib, random
 
 PROGNAME       = os.path.basename(sys.argv[0])
 PROGDESC       = "a DNS query tool written in Python"
-VERSION        = "0.4"
+VERSION        = "0.5"
 RESOLV_CONF    = "/etc/resolv.conf"    # where to find default server
 DEFAULT_PORT   = 53
 ITIMEOUT       = 0.5                   # initial timeout in seconds
@@ -421,19 +421,17 @@ def packed2int(input):
 
 
 def randomize_case(input):
-    """randomize case of input string; for use with bit 0x20 hack to
-    improve transaction identity: draft-vixie-dns-0x20-00"""
-    output = ""
+    """randomize case of input string; using the bit 0x20 hack to
+    improve input entropy: see draft-vixie-dns-0x20-00"""
+    outlist = []
     random.seed()
     for c in input:
         if c.isalpha():
             if random.choice([0,1]):
-                output += c.lower()
-            else:
-                output += c.upper()
-        else:
-            output += c
-    return output
+                outlist.append(chr((ord(c) ^ 0x20)))
+                continue
+        outlist.append(c)
+    return "".join(outlist)
 
 
 def domain_name_match(s1, s2, case_sensitive=False):
