@@ -1,5 +1,5 @@
 Program:	pydig (a DNS query tool written in Python)
-Version:	0.6
+Version:	0.7
 Written by:	Shumon Huque <shuque@upenn.edu>
 
 Description:
@@ -15,9 +15,9 @@ Description:
 	hashes and algorithms; counting how many compression references 
 	were followed; implementing the 0x20 bit case randomization hack;
 	providing more detailed statistics on TSIG authenticated zone
-	transfers, etc. It also has an option to walk a DNSSEC secured 
-	zone and enumerate all its resource records - this only works on
-	NSEC zones.
+	transfers, reporting query/response size amplification factor, etc. 
+	It also has an option to walk a DNSSEC secured zone and enumerate 
+	all its resource records - this obviously only works on NSEC zones.
 
 	RR type and class codes (qtype and qclass) unknown to this 
 	program can be specified with the TYPE123 and CLASS123 syntax.

@@ -26,7 +26,7 @@ import os, sys, socket, struct, time, string, base64, hashlib, random
 
 PROGNAME       = os.path.basename(sys.argv[0])
 PROGDESC       = "a DNS query tool written in Python"
-VERSION        = "0.6"
+VERSION        = "0.7"
 RESOLV_CONF    = "/etc/resolv.conf"    # where to find default server
 DEFAULT_PORT   = 53
 ITIMEOUT       = 0.5                   # initial timeout in seconds
@@ -36,6 +36,8 @@ EDNS0_UDPSIZE  = 4096
 DEBUG          = False                 # for more debugging output (-d)
 
 count_compression = 0                  # count of compression pointers derefs
+size_query = 0
+size_response = 0
 
 USAGE_STRING = """\
 %s (%s), version %s
@@ -516,7 +518,18 @@ def send_request_tcp(pkt, host, port, family):
     try:
         s.connect((host, port))
         s.send(pkt)
-        response = s.recv(BUFSIZE)
+        s.settimeout(0.2)
+        Done = False
+        response = ""
+        while not Done:
+            chunk = s.recv(BUFSIZE)
+            chunklen = len(chunk)
+            if chunklen == 0:
+                Done = True
+                continue
+            response += chunk
+    except socket.timeout:
+        pass
     except socket.error, diag:
         s.close()
         raise ErrorMessage("tcp socket error: %s" % diag)
@@ -533,7 +546,7 @@ def do_axfr(pkt, host, port, family):
     try:
         s.connect((host, port))
         s.send(pkt)
-        s.settimeout(1.0)        # setting non-blocking is often too aggressive
+        s.settimeout(0.2)        # setting non-blocking is often too aggressive
         Done = False
         response = ""
         readSoFar = 0
@@ -690,7 +703,7 @@ def mk_request(qname, qtype_val, qclass, id, options):
         msg = "%s%s%s%s%s%s%s%s" % \
               (packed_id, flags, qdcount, ancount, nscount, arcount,
                question, additional)
-    
+
     return msg
 
 
@@ -763,7 +776,7 @@ def decode_header(pkt, sentid, checkid=True):
 
 
 def txt2domainname(input, canonical_form=False):
-    """turn textual representation of a domain name into it's wire format"""
+    """turn textual representation of a domain name into its wire format"""
     if input == ".":
         d = '\x00'
     else:
@@ -1254,6 +1267,7 @@ if __name__ == '__main__':
     id = mk_id()
     tc = 0
     request = mk_request(qname, qtype_val, qclass_val, id, options)
+    size_query = len(request)
 
     if qtype == "AXFR":
         response, resplen = do_axfr(request, server_addr, port, family)
@@ -1268,6 +1282,7 @@ if __name__ == '__main__':
                       send_request_udp(request, server_addr, port, family,
                                        ITIMEOUT, RETRIES)
         t2 = time.time()
+        size_response = len(responsepkt)
         if not responsepkt:
             raise ErrorMessage("No response from server")
         answerid, qr, opcode, aa, tc, rd, ra, z, ad, cd, rcode, \
@@ -1275,7 +1290,7 @@ if __name__ == '__main__':
                   decode_header(responsepkt, id)
         if not tc:
             print ";; UDP response from %s, %d bytes, in %.3f sec" % \
-                  (responder_addr, len(responsepkt), (t2-t1))
+                  (responder_addr, size_response, (t2-t1))
             if server_addr != "0.0.0.0" and responder_addr[0] != server_addr:
                 print "WARNING: Response from unexpected address %s" % \
                       responder_addr[0]
@@ -1286,8 +1301,9 @@ if __name__ == '__main__':
         t1 = time.time()
         responsepkt = send_request_tcp(request, server_addr, port, family)
         t2 = time.time()
+        size_response = len(responsepkt) - 2
         print ";; TCP response from %s, %d bytes, in %.3f sec" % \
-              ( (server_addr, port), len(responsepkt)-2, (t2-t1))
+              ( (server_addr, port), size_response, (t2-t1))
         responsepkt = responsepkt[2:]           # ignore 2-byte length
         answerid, qr, opcode, aa, tc, rd, ra, z, ad, cd, rcode, \
                   qdcount, ancount, nscount, arcount = \
@@ -1298,8 +1314,10 @@ if __name__ == '__main__':
     print ";; rcode=%d(%s), id=%d" % (rcode, rc.get_name(rcode), answerid)
     print ";; qr=%d opcode=%d aa=%d tc=%d rd=%d ra=%d z=%d ad=%d cd=%d" % \
           (qr, opcode, aa, tc, rd, ra, z, ad, cd)
-    print ";; question=%d, answer=%d, authority=%d, additional=%d\n" % \
+    print ";; question=%d, answer=%d, authority=%d, additional=%d" % \
           (qdcount, ancount, nscount, arcount)
+    print ";; Size query=%d, response=%d, amplication=%.2f\n" % \
+        (size_query, size_response, (size_response * 1.0/size_query))
     
     r = responsepkt
     offset = 12                     # skip over DNS header
@@ -1332,6 +1350,6 @@ if __name__ == '__main__':
                        qc.get_name(rrclass), qt.get_name(rrtype), rdata)
         print
 
-    dprint("Compression pointer dereferences=%d" % count_compression)
+    dprint(";; Compression pointer dereferences=%d" % count_compression)
 
     sys.exit(0)
