@@ -1323,6 +1323,7 @@ if __name__ == '__main__':
     offset = 12                     # skip over DNS header
 
     print ";; question section (%d records)" % qdcount
+    answer_qname = None
     for i in range(qdcount):
         domainname, rrtype, rrclass, offset = decode_question(r, offset)
         answer_qname = pdomainname(domainname)
@@ -1331,9 +1332,10 @@ if __name__ == '__main__':
     print
 
     ## make sure answered question matches posed question.
-    if (not domain_name_match(answer_qname, qname, options["do_0x20"])) \
-       or (qtype_val != rrtype) or (qclass_val != rrclass):
-        print "\n*** WARNING: Answer didn't match question!\n"
+    if rcode in [0, 3]:
+        if (not domain_name_match(answer_qname, qname, options["do_0x20"])) \
+                or (qtype_val != rrtype) or (qclass_val != rrclass):
+            print "\n*** WARNING: Answer didn't match question!\n"
 
     for section, rrcount in \
         [("answer", ancount),  ("authority", nscount), ("additional", arcount)]:
@@ -1352,4 +1354,4 @@ if __name__ == '__main__':
 
     dprint(";; Compression pointer dereferences=%d" % count_compression)
 
-    sys.exit(0)
+    sys.exit(rcode)
