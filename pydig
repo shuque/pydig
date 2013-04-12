@@ -48,6 +48,7 @@ Options:
         -h                        print program usage information
         @server                   server to query
         -pNN                      use port NN
+        -bIP                      use IP as source IP address
         +tcp                      send query via TCP
         +aaonly                   set authoritative answer bit
         +cdflag                   set checking disabled bit
@@ -105,7 +106,7 @@ def excepthook(exc_type, exc_value, exc_traceback):
 # Global dictionary of options: many options may be overridden or set in
 # parse_args() by command line arguments.
 
-options = dict(server=None, port=DEFAULT_PORT, use_tcp=False,
+options = dict(server=None, port=DEFAULT_PORT, srcip=None, use_tcp=False,
                aa=0, cd=0, rd=1, use_edns0=False, dnssec_ok=0,
                hexrdata=False, do_zonewalk=False, do_0x20=False,
                ptr=False, af=socket.AF_UNSPEC, do_tsig=False,
@@ -353,6 +354,7 @@ def parse_args(arglist):
         if arg.startswith('@'):            options["server"] = arg[1:]
         elif arg == "-h":                  raise UsageError()
         elif arg.startswith("-p"):         options["port"] = int(arg[2:])
+        elif arg.startswith("-b"):         options["srcip"] = arg[2:]
         elif arg == "+tcp":                options["use_tcp"] = True
         elif arg == "+aaonly":             options["aa"] = 1
         elif arg == "+cdflag":             options["cd"] = 1
@@ -491,6 +493,8 @@ def send_request_udp(pkt, host, port, family, itimeout, retries):
     gotresponse = False
     responsepkt, responder_addr = "", ("", 0)
     s = socket.socket(family, socket.SOCK_DGRAM)
+    if options["srcip"]:
+        s.bind((options["srcip"], 0))
     timeout = itimeout
     while (retries > 0):
         s.settimeout(timeout)
@@ -1316,7 +1320,7 @@ if __name__ == '__main__':
           (qr, opcode, aa, tc, rd, ra, z, ad, cd)
     print ";; question=%d, answer=%d, authority=%d, additional=%d" % \
           (qdcount, ancount, nscount, arcount)
-    print ";; Size query=%d, response=%d, amplication=%.2f\n" % \
+    print ";; Size query=%d, response=%d, amplification=%.2f\n" % \
         (size_query, size_response, (size_response * 1.0/size_query))
     
     r = responsepkt
