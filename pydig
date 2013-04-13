@@ -22,7 +22,7 @@
 # Author: Shumon Huque <shuque -@- upenn.edu>
 # 
 
-import os, sys, socket, struct, time, string, base64, hashlib, random
+import os, sys, socket, struct, time, string, base64, hashlib, random, math
 
 PROGNAME       = os.path.basename(sys.argv[0])
 PROGDESC       = "a DNS query tool written in Python"
@@ -1320,8 +1320,25 @@ if __name__ == '__main__':
           (qr, opcode, aa, tc, rd, ra, z, ad, cd)
     print ";; question=%d, answer=%d, authority=%d, additional=%d" % \
           (qdcount, ancount, nscount, arcount)
-    print ";; Size query=%d, response=%d, amplification=%.2f\n" % \
-        (size_query, size_response, (size_response * 1.0/size_query))
+
+    if family == socket.AF_INET:
+        overhead = 42                # Ethernet + IPv4 + UDP header
+    elif family == socket.AF_INET6:
+        overhead = 62                # Ethernet + IPv6 + UDP header
+    else:
+        overhead = 0                 # shouldn't happen
+
+    # amp1 is the ratio of only the DNS response payload & query payload
+    # amp2 is the estimated ratio of the full response/query packets,
+    #      assuming an Ethernet link layer.
+    amp1 = (size_response * 1.0/size_query)
+    w_qsize = size_query + overhead
+    w_rsize = size_response + \
+        overhead * math.ceil(size_response/(1500.0-overhead))
+    amp2 = w_rsize/w_qsize
+
+    print ";; Size query=%d, response=%d, amp1=%.2f amp2=%.2f\n" % \
+        (size_query, size_response, amp1, amp2)
     
     r = responsepkt
     offset = 12                     # skip over DNS header
