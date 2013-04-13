@@ -26,7 +26,7 @@ import os, sys, socket, struct, time, string, base64, hashlib, random, math
 
 PROGNAME       = os.path.basename(sys.argv[0])
 PROGDESC       = "a DNS query tool written in Python"
-VERSION        = "0.7"
+VERSION        = "0.8"
 RESOLV_CONF    = "/etc/resolv.conf"    # where to find default server
 DEFAULT_PORT   = 53
 ITIMEOUT       = 0.5                   # initial timeout in seconds
