@@ -168,14 +168,17 @@ sshfp_alg = { 1:"RSA", 2:"DSS" }                        # see RFC 4255
 sshfp_fptype = { 1:"SHA-1" }                            # see RFC 4255
 
 # TSIG algorithms: see RFC 2845 (hmac-md5), 3645 (gss-tsig), 4635 (hmac-sha*)
-# So far, pydig implements only the most commonly used hmac-md5.
-dns_tsig_alg = { "hmac-md5"    : "hmac-md5.sig-alg.reg.int.",
-                 "gss-tsig"    : "gss-tsig.",
-                 "hmac-sha1"   : "hmac-sha1.",
-                 "hmac-sha224" : "hmac-sha224.",
-                 "hmac-sha256" : "hmac-sha256.",
-                 "hmac-sha384" : "hmac-sha384.",
-                 "hmac-sha512" : "hmac-sha512." }
+# GSS-TSIG is not yet implemented.
+
+dns_tsig_alg = { 
+    "hmac-md5"    : ("hmac-md5.sig-alg.reg.int.", hashlib.md5),
+    "gss-tsig"    : ("gss-tsig.", None),
+    "hmac-sha1"   : ("hmac-sha1.", hashlib.sha1),
+    "hmac-sha224" : ("hmac-sha224.", hashlib.sha224),
+    "hmac-sha256" : ("hmac-sha256.", hashlib.sha256),
+    "hmac-sha384" : ("hmac-sha384.", hashlib.sha384),
+    "hmac-sha512" : ("hmac-sha512.", hashlib.sha512),
+    }
 
 class Struct:
     "Just to emulate C struct or record ..."
@@ -187,6 +190,7 @@ class Tsig:
         self.keyname = None
         self.key = None
         self.algorithm = None
+        self.function = None
         self.prior_digest = None
         self.sigtime = None
         self.request = Struct()
@@ -206,13 +210,12 @@ class Tsig:
     def setkey(self, name, key, algorithm="hmac-md5"):
         self.keyname = name
         self.key = key
-        if algorithm != "hmac-md5":
-            raise ErrorMessage("Only hmac-md5 TSIG algorithm supported.")
-        self.algorithm = dns_tsig_alg.get(algorithm)
+        if algorithm == None:
+            raise ErrorMessage("unsupported TSIG algorithm %s" % algorithm)
+        self.algorithm, self.function = dns_tsig_alg.get(algorithm)
 
     def mk_request_tsig(self, msgid, msg):
-        """Create TSIG (Transaction Signature) RR; see RFC 2845; currently
-        only supports the HMAC-MD5 signature algorithm."""
+        """Create TSIG (Transaction Signature) RR; see RFC 2845; currently"""
 
         # strictly speaking, we only need tsig name/alg in canonical form
         # for the MAC computation, but we'll use them in the RR also ..
@@ -232,7 +235,7 @@ class Tsig:
         data = "%s%s%s%s%s%s%s%s%s" % (msg, tsig_name, tsig_class, tsig_ttl,
                                        tsig_alg, tsig_sigtime, tsig_fudge,
                                        tsig_error, tsig_otherlen)
-        mac = hmac_md5(self.key, data)
+        mac = hmac(self.key, data, self.function)
         mac_size = struct.pack('!H', len(mac))
         self.request.mac = mac
         self.origid = struct.pack('!H', msgid)
@@ -329,8 +332,9 @@ class Tsig:
         else:
             input_data = "%s%s%s" % \
                          (request_mac, dns_message, tsig_vars)
-        computed_mac = hmac_md5(self.key, input_data)
-        if computed_mac != self.response.mac:
+        computed_mac = hmac(self.key, input_data, self.function)
+        # Support Truncation: compare only first self.response.mac_size bits
+        if computed_mac[0:self.response.mac_size] != self.response.mac[0:self.response.mac_size]:
             print "WARNING: TSIG record verification failed."
             self.verify_failure += 1
         else:
@@ -735,25 +739,25 @@ def xor_string(a, b):
         result += chr(ord(x) ^ ord(y))
     return result
 
-                                
-def hmac_md5(key, data):
-    """HMAC-MD5 algorithm; see RFC 2104"""
+
+def hmac(key, data, func):
+    """HMAC algorithm; see RFC 2104, 4635"""
     BLOCKSIZE = 64                             # 64 bytes = 512 bits
     ipad = '\x36' * BLOCKSIZE
     opad = '\x5c' * BLOCKSIZE
 
     key = "%s%s" % (key, '\x00' * (BLOCKSIZE - len(key)))  # pad to blocksize
 
-    m = hashlib.md5()
+    m = func()
     m.update("%s%s" % (xor_string(key, ipad), data))
     r1 = m.digest()
 
-    m = hashlib.md5()
+    m = func()
     m.update("%s%s" % (xor_string(key, opad), r1))
 
     return m.digest()
 
-
+                                
 def decode_header(pkt, sentid, checkid=True):
     """Decode a DNS protocol header"""
     answerid, answerflags, qdcount, ancount, nscount, arcount = \

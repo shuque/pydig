@@ -1,5 +1,5 @@
 Program:	pydig (a DNS query tool written in Python)
-Version:	0.8
+Version:	0.9
 Written by:	Shumon Huque <shuque@upenn.edu>
 
 Description:
@@ -66,6 +66,7 @@ Example usage:
        pydig @dns2.example.com -6 +hex www.example.com
        pydig @192.168.72.3 +walk secure.example.com
        pydig @192.168.14.7 -yhmac-md5:my.secret.key.:YWxidXMgZHVtYmxlZG9yZSByaWNoYXJkIGRhd2tpbnM= example.com axfr
+       pydig @192.168.14.7 -yhmac-sha256:my.secret.key.:NBGFWFr+rR/uu14B94Ab1+u81M2DTqB65gOv16nG8Xw= example.com axfr
 
 Limitations:
 
@@ -78,9 +79,9 @@ Limitations:
 	just ignores the nonsensical ones. Certain options also 
 	imply other options, eg. +walk and +dnssec imply +edns0.
 
-	For TSIG (Transaction Signature) signed messages,  only  the
-        manadatory-to-implement HMAC-MD5 TSIG signature algorithm is
-        supported.
+	For TSIG (Transaction Signature) signed messages, the program
+	supports HMAC-MD5/SHA1/SHA256/SHA384/SHA256. It doesn't yet
+	support GSS-TSIG.
 
 	It does not yet verify signatures in DNSSEC secured data.
 
@@ -88,13 +89,14 @@ Limitations:
 
 Pre-requisites:
 
-	Python 2.3 (or later)
+	Python 2.5 (or later)
 
 Platforms:
 
 	Tested on the following platforms:
 		Solaris 8, 9, 10, and 11
 		Linux 2.x
+		FreeBSD 9.x
 		Mac OS X 10.4 through 10.7
 
 	and with Python 2.3 - 2.7
@@ -108,6 +110,6 @@ E-mail: shuque -at- upenn.edu
 Web: http://www.huque.com/~shuque/
 Philadelphia, United States of America.
 
-Copyright (c) 2006 - 2012, Shumon Huque. 
+Copyright (c) 2006 - 2014, Shumon Huque. 
 All rights reserved. This program is free software; you can redistribute 
 it and/or modify it under the same terms of the GNU General Public License.
