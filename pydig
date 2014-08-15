@@ -26,7 +26,7 @@ import os, sys, socket, struct, time, string, base64, hashlib, random, math
 
 PROGNAME       = os.path.basename(sys.argv[0])
 PROGDESC       = "a DNS query tool written in Python"
-VERSION        = "0.9"
+VERSION        = "0.91"
 RESOLV_CONF    = "/etc/resolv.conf"    # where to find default server
 DEFAULT_PORT   = 53
 ITIMEOUT       = 0.5                   # initial timeout in seconds
@@ -144,8 +144,8 @@ qt = DNSparam("TYPE",
                    KEY=25, AAAA=28, NXT=30, SRV=33, NAPTR=35, CERT=37, A6=38,
                    DNAME=39, OPT=41, DS=43, SSHFP=44, IPSECKEY=45, RRSIG=46,
                    NSEC=47, DNSKEY=48, DHCID=49, NSEC3=50, NSEC3PARAM=51,
-                   TLSA=52, HIP=55, SPF=99, AXFR=252, TKEY=249, TSIG=250, 
-                   ANY=255, TA=32768, DLV=32769))
+                   TLSA=52, HIP=55, OPENPGPKEY=61, SPF=99, AXFR=252, 
+                   TKEY=249, TSIG=250, ANY=255, TA=32768, DLV=32769))
 
 qc = DNSparam("CLASS",
               dict(IN=1, CH=3, HS=4, ANY=255))
@@ -937,6 +937,11 @@ def decode_tlsa_rdata(rdata):
     return "%d %d %d %s" % (usage, selector, mtype, cadata)
 
 
+def decode_openpgpkey_rdata(rdata):
+    """decode OPENPGPKEY rdata: base64-string"""
+    return "%s" % base64.standard_b64encode(rdata)
+
+
 def decode_dnskey_rdata(pkt, offset, rdlen):
     """decode DNSKEY rdata: flags, proto, alg, pubkey; see RFC 4034"""
     flags, proto, alg = struct.unpack('!HBB', pkt[offset:offset+4])
@@ -1114,6 +1119,8 @@ def decode_rr(pkt, offset, hexrdata):
         rdata = decode_nsec3param_rdata(pkt, offset, rdlen)
     elif rrtype == 52:                                       # TLSA
         rdata = decode_tlsa_rdata(rdata)
+    elif rrtype == 61:                                       # OPENPGPKEY
+        rdata = decode_openpgpkey_rdata(rdata)
     elif rrtype == 250:                                      # TSIG
         tsig_name = pdomainname(domainname)
         rdata = tsig.decode_tsig_rdata(pkt, offset, rdlen,
