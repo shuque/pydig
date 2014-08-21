@@ -2,13 +2,12 @@ Todo List (ie. things I might implement in the future)
 
 * do more Pythonic things
   - re-architect to use more OOP classes
-  - use "warn" module to issue warnings
   - return instance of an options class rather than a dictionary in 
     parse_args()?
   - breakup script into script and a module.py file
 
+* Decode URI, and other new types of records
 * Implement +trace --> iterative resolution
-* Use some python module for better options parsing (which one?)
 * More graceful error messages in command line parsing - give
   better feedback about exception raised
 * Make sure TSIG record in response is the last record in additional section

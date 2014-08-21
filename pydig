@@ -144,8 +144,9 @@ qt = DNSparam("TYPE",
                    KEY=25, AAAA=28, NXT=30, SRV=33, NAPTR=35, CERT=37, A6=38,
                    DNAME=39, OPT=41, DS=43, SSHFP=44, IPSECKEY=45, RRSIG=46,
                    NSEC=47, DNSKEY=48, DHCID=49, NSEC3=50, NSEC3PARAM=51,
-                   TLSA=52, HIP=55, OPENPGPKEY=61, SPF=99, AXFR=252, 
-                   TKEY=249, TSIG=250, ANY=255, TA=32768, DLV=32769))
+                   TLSA=52, HIP=55, CDS=59, CDNSKEY=60, OPENPGPKEY=61, SPF=99,
+                   AXFR=252, TKEY=249, TSIG=250, ANY=255, URI=256, 
+                   TA=32768, DLV=32769))
 
 qc = DNSparam("CLASS",
               dict(IN=1, CH=3, HS=4, ANY=255))
@@ -1101,7 +1102,7 @@ def decode_rr(pkt, offset, hexrdata):
         rdata = decode_srv_rdata(pkt, offset)
     elif rrtype == 35:                                       # NAPTR
         rdata = decode_naptr_rdata(pkt, offset, rdlen)
-    elif rrtype in [43, 32769]:                              # DS, DLV
+    elif rrtype in [43, 59, 32769]:                          # [C]DS, DLV
         rdata = decode_ds_rdata(pkt, offset, rdlen)
     elif rrtype == 44:                                       # SSHFP
         rdata = decode_sshfp_rdata(pkt, offset, rdlen)
@@ -1111,7 +1112,7 @@ def decode_rr(pkt, offset, hexrdata):
         rdata = decode_rrsig_rdata(pkt, offset, rdlen)
     elif rrtype == 47:                                       # NSEC
         rdata = decode_nsec_rdata(pkt, offset, rdlen)
-    elif rrtype in [48, 25]:                                 # DNSKEY, KEY
+    elif rrtype in [48, 25, 60]:                             # [C]DNSKEY, KEY
         rdata = decode_dnskey_rdata(pkt, offset, rdlen)
     elif rrtype == 50:                                       # NSEC3
         rdata = decode_nsec3_rdata(pkt, offset, rdlen)
