@@ -12,12 +12,13 @@ Description:
 	time to time, such as: optionally presenting a hexdump of the 
 	resource data rather than decoding it; decoding the exponent in 
 	a RSA/SHA-1 DNSKEY; printing out names of DNSSEC related crypto 
-	hashes and algorithms; counting how many compression references 
-	were followed; implementing the 0x20 bit case randomization hack;
-	providing more detailed statistics on TSIG authenticated zone
-	transfers, reporting query/response size amplification factor, etc. 
-	It also has an option to walk a DNSSEC secured zone and enumerate 
-	all its resource records - this obviously only works on NSEC zones.
+	hashes, algorithms and algorithm parameters, key sizes; counting 
+	how many compression references  were followed; implementing the 
+	0x20 bit case randomization hack; providing more detailed statistics 
+	on TSIG authenticated zone transfers, reporting query/response size 
+	amplification factor, etc. It also has an option to walk a DNSSEC 
+	secured zone and enumerate  all its resource records - this obviously 
+	only works on NSEC zones.
 
 	RR type and class codes (qtype and qclass) unknown to this 
 	program can be specified with the TYPE123 and CLASS123 syntax.

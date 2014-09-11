@@ -2,7 +2,7 @@
 #
 # pydig: A small DNS query tool.
 # 
-# Copyright (C) 2006 - 2012, Shumon Huque
+# Copyright (C) 2006 - 2014, Shumon Huque
 #
 # pydig is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 # Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
 #
-# Author: Shumon Huque <shuque -@- upenn.edu>
+# Author: Shumon Huque <shuque -@- gmail.com>
 # 
 
 import os, sys, socket, struct, time, string, base64, hashlib, random, math
@@ -160,9 +160,10 @@ dnssec_proto = { 0:"Reserved", 1:"TLS", 2:"Email", 3:"DNSSEC", 4:"IPSEC" }
 
 dnssec_alg = { 0:"Reserved", 1:"RSAMD5", 2:"DH", 3:"DSA", 4:"ECC",
                5:"RSASHA1", 6:"DSA-NSEC3-SHA1", 7:"RSASHA1-NSEC3-SHA1",
-               8:"RSASHA256", 10:"RSASHA512", 12:"ECC-GOST" }
+               8:"RSASHA256", 10:"RSASHA512", 12:"ECC-GOST",
+               13:"ECDSAP256SHA256", 14:"ECDSAP384SHA384", }
 
-dnssec_digest = { 1:"SHA-1", 2:"SHA-256" }              # see RFC 4509
+dnssec_digest = { 1:"SHA-1", 2:"SHA-256", 4:"SHA-384" } # see RFC 4509, 6605
 
 sshfp_alg = { 1:"RSA", 2:"DSS" }                        # see RFC 4255
 
@@ -950,18 +951,34 @@ def decode_dnskey_rdata(pkt, offset, rdlen):
     if DEBUG:
         zonekey = (flags >> 8) & 0x1;         # bit 7
         sepkey = flags & 0x1;                 # bit 15
-        if alg == 5:                          # RSA/SHA1 algorithm (RFC 3110)
+        keytype = None
+        if proto == 3:
+            if zonekey and sepkey:
+                keytype="KSK"
+            elif zonekey:
+                keytype="ZSK"
+        if keytype: comments = "%s, " % keytype
+        comments += "proto=%s, alg=%s" % \
+                   (dnssec_proto[proto], dnssec_alg[alg])
+        if alg in [5, 7, 8, 10]:              # RSA algorithms
             if pubkey[0] == '\x00':   # length field is 3 octets
                 elen, = struct.unpack('!H', pubkey[1:3])
                 exponent = packed2int(pubkey[1:1+elen])
-            else:
+                modulus_len = len(pubkey[1+elen:]) * 8
+            else:                     # length field is 1 octet
                 elen, = struct.unpack('B', pubkey[0])
                 exponent = packed2int(pubkey[1:1+elen])
-        else:
-            exponent=0
-        result = "%d %d(%s) %d(%s) e=%d %s" % \
-                 (flags, proto, dnssec_proto[proto], alg, dnssec_alg[alg],
-                  exponent, base64.standard_b64encode(pubkey))
+                modulus_len = len(pubkey[1+elen:]) * 8
+            comments = comments + ", e=%d modulus_size=%d" % \
+                       (exponent, modulus_len)
+        elif alg in [3, 6]:                   # DSA algorithms
+            # not decoded yet (not commonly seen?) - see RFC 2536
+            pass
+        elif alg in [13, 14]:                 # ECDSA algorithms
+            comments = comments + ", size=%d" % (len(pubkey) * 4)
+        result = "%d %d %d  %s ; %s" % \
+                 (flags, proto, alg, base64.standard_b64encode(pubkey), 
+                  comments)
     else:
         result = "%d %d %d %s" % \
                  (flags, proto, alg, base64.standard_b64encode(pubkey))
@@ -991,10 +1008,13 @@ def decode_rrsig_rdata(pkt, offset, rdlen):
     d, offset = get_domainname(pkt, offset+18)
     signer_name = pdomainname(d)
     signature = pkt[offset:end_rdata]
-    return "%s %d %d %d %s %s %d %s %s" % \
-           (qt.get_name(type_covered), alg, labels, orig_ttl,
-            sig_exp, sig_inc, keytag, signer_name,
-            base64.standard_b64encode(signature))
+    retval = "%s %d %d %d %s %s %d %s %s" % \
+             (qt.get_name(type_covered), alg, labels, orig_ttl,
+              sig_exp, sig_inc, keytag, signer_name,
+              base64.standard_b64encode(signature))
+    if DEBUG:
+        retval += " ; sigsize=%d" % (len(signature) * 8)
+    return retval
 
 
 def decode_typebitmap(windownum, bitmap):
