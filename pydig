@@ -975,7 +975,9 @@ def decode_dnskey_rdata(pkt, offset, rdlen):
             # not decoded yet (not commonly seen?) - see RFC 2536
             pass
         elif alg in [13, 14]:                 # ECDSA algorithms
-            comments = comments + ", size=%d" % (len(pubkey) * 4)
+            # The pubkey is the concatenation of 2 curve points, so
+            # for ECDSAP384, the size is 768 bits.
+            comments = comments + ", size=%d" % (len(pubkey) * 8)
         result = "%d %d %d  %s ; %s" % \
                  (flags, proto, alg, base64.standard_b64encode(pubkey), 
                   comments)
