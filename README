@@ -1,5 +1,5 @@
 Program:	pydig (a DNS query tool written in Python)
-Version:	0.91
+Version:	1.00
 Written by:	Shumon Huque <shuque@gmail.com>
 
 Description:
@@ -22,11 +22,6 @@ Description:
 
 	RR type and class codes (qtype and qclass) unknown to this 
 	program can be specified with the TYPE123 and CLASS123 syntax.
-
-	This program is self contained, doesn't need to be installed
-	in any particular location, and doesn't depend on any 3rd
-	party modules. All it needs is a recent version of Python (and
-	its standard library).
 
 Usage:
 
@@ -104,12 +99,11 @@ Platforms:
 
 Installation:
 
-	1. (as root) make install
+	1. (as root) python setup.py install
 
 Shumon Huque
-E-mail: shuque -at- upenn.edu
-Web: http://www.huque.com/~shuque/
-Philadelphia, United States of America.
+E-mail: shuque -at- gmail.com
+Web: https://www.huque.com/~shuque/
 
 Copyright (c) 2006 - 2014, Shumon Huque. 
 All rights reserved. This program is free software; you can redistribute 

@@ -1,1 +1,9 @@
 *~
+*.pyc
+*.pyo
+*.so
+archive/
+build/
+sdist/
+docs/_build/
+test/
