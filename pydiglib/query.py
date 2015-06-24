@@ -188,7 +188,7 @@ def do_axfr(query, pkt, host, port, family):
             msgsizes.addvalue(msg_len)
             response = DNSresponse(family, query, pkt, msg, 0, checkid=False)
             if response.rcode != 0:
-                raise ErrorMessage("AXFR rcode %d" % rc.get_name(response.rcode))
+                raise ErrorMessage("AXFR rcode %s" % rc.get_name(response.rcode))
             response.decode_sections(is_axfr=True)
             rrtotal += response.ancount
 
