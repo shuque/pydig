@@ -3,6 +3,7 @@ import os, sys, socket, base64
 from .common import *
 from .util import *
 from .tsig import Tsig, read_tsig_params
+from .windows import get_windows_default_dns
 
 
 # Global dictionary of options: many options may be overridden or set in
@@ -115,13 +116,18 @@ def parse_args(arglist):
             break
 
     if not options["server"]:         # use 1st server listed in resolv.conf
-        for line in open(RESOLV_CONF):
-            if line.startswith("nameserver"):
-                options["server"] = line.split()[1]
-                break
+        if os.name != 'nt':
+            for line in open(RESOLV_CONF):
+                if line.startswith("nameserver"):
+                    options["server"] = line.split()[1]
+                    break
+            else:
+                raise ErrorMessage("Couldn't find a default server in %s" %
+                                   RESOLV_CONF)
         else:
-            raise ErrorMessage("Couldn't find a default server in %s" %
-                               RESOLV_CONF)
+            options["server"] = get_windows_default_dns()
+            if not options["server"]:
+                raise ErrorMessage("Couldn't find a default server")
 
     qname = arglist[i]
 
