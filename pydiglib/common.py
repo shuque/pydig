@@ -35,6 +35,7 @@ Options:
         +edns0                    use EDNS0 with 4096 octet UDP payload
         +dnssec                   request DNSSEC RRs in response
         +hex                      print hexdump of rdata field
+        +cookie                   send EDNS cookie option
         +walk                     walk (enumerate) a DNSSEC secured zone
         +0x20                     randomize case of query name (bit 0x20 hack)
         -4                        perform queries using IPv4
