@@ -498,7 +498,7 @@ def decode_rr(pkt, offset, hexrdata):
         rdata = decode_nsec3_rdata(pkt, offset, rdlen)
     elif rrtype == 51:                                       # NSEC3PARAM
         rdata = decode_nsec3param_rdata(pkt, offset, rdlen)
-    elif rrtype == 52:                                       # TLSA
+    elif rrtype in [52, 53]:                                 # TLSA, SMIMEA
         rdata = decode_tlsa_rdata(rdata)
     elif rrtype == 61:                                       # OPENPGPKEY
         rdata = decode_openpgpkey_rdata(rdata)
