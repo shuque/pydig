@@ -189,4 +189,17 @@ sshfp_fptype = {
     2: "SHA-256",
 }            
 
-
+# EDNS Options Codes
+edns_opt = {
+    0: "Reserved",
+    3: "NSID",
+    5: "DAU",
+    6: "DHU",
+    7: "N3U",
+    8: "Client Subnet",
+    9: "Expire",
+    10: "Cookie",
+    11: "Keepalive",
+    12: "Padding",
+    13: "Chain",
+}

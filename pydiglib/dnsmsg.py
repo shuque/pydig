@@ -191,7 +191,8 @@ def print_optrr(rrclass, ttl, rdata):
     blob = rdata
     while blob:
         ocode, olen = struct.unpack('!HH', blob[:4])
-        print ";; OPT code=%d, length=%d" % (ocode, olen)
+        odesc = edns_opt.get(ocode, "Unknown")
+        print ";; OPT code=%d (%s), length=%d" % (ocode, odesc, olen)
         print ";; DATA: %s" % hexdump(blob[4:4+olen], separator='')
         blob = blob[4+olen:]
 
