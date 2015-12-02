@@ -188,6 +188,12 @@ def print_optrr(rrclass, ttl, rdata):
     if z & 0x8000: flags.append("do")                  # DNSSEC OK bit
     print ";; OPT pseudo RR: edns_version=%d, udp_payload=%d, flags=%s, ercode=%d" % \
           (version, rrclass, ' '.join(flags), ercode)
+    blob = rdata
+    while blob:
+        ocode, olen = struct.unpack('!HH', blob[:4])
+        print ";; OPT code=%d, length=%d" % (ocode, olen)
+        print ";; DATA: %s" % hexdump(blob[4:4+olen], separator='')
+        blob = blob[4+olen:]
 
 
 def decode_question(pkt, offset):
@@ -480,8 +486,8 @@ def decode_rr(pkt, offset, hexrdata):
         rdata = socket.inet_ntop(socket.AF_INET6, rdata)
     elif rrtype == 33:                                       # SRV
         rdata = decode_srv_rdata(pkt, offset)
-    elif rrtype == 35:                                       # NAPTR
-        rdata = decode_naptr_rdata(pkt, offset, rdlen)
+    elif rrtype == 41:                                       # OPT
+        pass
     elif rrtype in [43, 59, 32769]:                          # [C]DS, DLV
         rdata = decode_ds_rdata(pkt, offset, rdlen)
     elif rrtype == 44:                                       # SSHFP

@@ -16,16 +16,22 @@ def mk_id():
         return random.randint(1,65535)
 
 
-def mk_optrr(edns_version, udp_payload, dnssec_ok):
-    """Create EDNS0 OPT RR with udp_payload advertisement; see RFC 2671"""
+def mk_optrr(edns_version, udp_payload, dnssec_ok=False, cookie=False):
+    """Create EDNS0 OPT RR; see RFC 2671"""
+    rdata     = ""
     rrname    = '\x00'                                   # empty domain
     rrtype    = struct.pack('!H', qt.get_val("OPT"))     # OPT type code
     rrclass = struct.pack('!H', udp_payload)             # udp payload
     if dnssec_ok: z = 0x8000
     else:         z = 0x0
     ttl   = struct.pack('!BBH', 0, edns_version, z)      # extended rcode
-    rdlen = struct.pack('!H', 0)                         # rdlen=0
-    return "%s%s%s%s%s" % (rrname, rrtype, rrclass, ttl, rdlen)
+    if cookie:
+        optcode = struct.pack('!H', 10)
+        optlen = struct.pack('!H', 8)
+        optdata = open("/dev/urandom").read(8)
+        rdata = optcode + optlen + optdata
+    rdlen = struct.pack('!H', len(rdata))
+    return "%s%s%s%s%s%s" % (rrname, rrtype, rrclass, ttl, rdlen, rdata)
 
 
 def mk_request(query, sent_id, options):
@@ -47,7 +53,9 @@ def mk_request(query, sent_id, options):
 
     if options["use_edns0"]:
         arcount = struct.pack('!H', 1)
-        additional = mk_optrr(0, EDNS0_UDPSIZE, options["dnssec_ok"])
+        additional = mk_optrr(0, EDNS0_UDPSIZE, 
+                              dnssec_ok=options["dnssec_ok"],
+                              cookie=options["cookie"]);
     else:
         arcount = struct.pack('!H', 0)
         additional = ""
