@@ -79,6 +79,7 @@ DICT_RRTYPE = {
     "NSEC3": 50,
     "NSEC3PARAM": 51,
     "TLSA": 52,
+    "SMIMEA": 53,
     "HIP": 55,
     "NINFO": 56,
     "RKEY": 57,
