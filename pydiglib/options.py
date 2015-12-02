@@ -21,6 +21,7 @@ options = dict(
     dnssec_ok=0,
     hexrdata=False, 
     do_zonewalk=False, 
+    cookie=False,
     do_0x20=False,
     ptr=False, 
     af=socket.AF_UNSPEC, 
@@ -80,6 +81,9 @@ def parse_args(arglist):
 
         elif arg == "+walk":
             options["do_zonewalk"] = True
+
+        elif arg == "+cookie":
+            options["cookie"] = True
 
         elif arg == "+0x20":
             options["do_0x20"] = True
