@@ -17,6 +17,11 @@ def hexdump(input, separator=' '):
     return separator.join(hexlist)
 
 
+def h2bin(x):
+    """turn hex dump string with optional whitespaces into binary string"""
+    return x.replace(' ', '').replace('\n', '').decode('hex')
+
+
 def packed2int(input):
     """convert arbitrary sized bigendian packed string into an integer"""
     sum = 0

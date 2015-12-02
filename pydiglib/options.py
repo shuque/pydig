@@ -74,8 +74,8 @@ def parse_args(arglist):
             options["use_edns0"] = True
 
         elif arg == "+dnssec":
-            options["dnssec_ok"] = 1; 
             options["use_edns0"] = True
+            options["dnssec_ok"] = 1; 
 
         elif arg == "+hex":
             options["hexrdata"] = True
@@ -84,9 +84,13 @@ def parse_args(arglist):
             options["do_zonewalk"] = True
 
         elif arg == "+cookie":
-            options["cookie"] = True
             options["use_edns0"] = True
+            options["cookie"] = True
 
+        elif arg.startswith("+cookie="):
+            options["use_edns0"] = True
+            options["cookie"] = arg[8:]
+            
         elif arg == "+0x20":
             options["do_0x20"] = True
 

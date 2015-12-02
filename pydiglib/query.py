@@ -27,8 +27,15 @@ def mk_optrr(edns_version, udp_payload, dnssec_ok=False, cookie=False):
     ttl   = struct.pack('!BBH', 0, edns_version, z)      # extended rcode
     if cookie:
         optcode = struct.pack('!H', 10)
-        optlen = struct.pack('!H', 8)
-        optdata = open("/dev/urandom").read(8)
+        if cookie == True:
+            optdata = open("/dev/urandom").read(8)
+            optlen = struct.pack('!H', 8)
+        else:
+            try:
+                optdata = h2bin(cookie)
+            except:
+                raise ErrorMessage("Malformed cookie supplied: %s" % cookie)
+            optlen = struct.pack('!H', len(optdata))
         rdata = optcode + optlen + optdata
     rdlen = struct.pack('!H', len(rdata))
     return "%s%s%s%s%s%s" % (rrname, rrtype, rrclass, ttl, rdlen, rdata)
