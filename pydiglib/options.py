@@ -9,6 +9,7 @@ from .windows import get_windows_default_dns
 # Global dictionary of options: many options may be overridden or set in
 # parse_args() by command line arguments.
 options = dict(
+    DEBUG=False,
     server=None, 
     port=DEFAULT_PORT, 
     srcip=None, 
@@ -34,7 +35,6 @@ options = dict(
 def parse_args(arglist):
     """Parse command line arguments. Options must come first."""
 
-    global DEBUG
     qtype = "A"
     qclass = "IN"
     
@@ -104,7 +104,7 @@ def parse_args(arglist):
             options["ptr"] = True
 
         elif arg == "-d":
-            DEBUG = True
+            options['DEBUG'] = True
 
         elif arg.startswith("-k"):
             tsig_file = arg[2:]

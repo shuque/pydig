@@ -248,7 +248,7 @@ def decode_sshfp_rdata(pkt, offset, rdlen):
     """decode SSHFP rdata: alg, fp_type, fingerprint; see RFC 4255"""
     alg, fptype = struct.unpack('BB', pkt[offset:offset+2])
     fingerprint = hexdump(pkt[offset+2:offset+rdlen], separator='')
-    if DEBUG:
+    if options['DEBUG']:
         rdata = "%d(%s) %d(%s) %s" % \
                 (alg, sshfp_alg.get(alg, "unknown"),
                  fptype, sshfp_fptype.get(fptype, "unknown"), fingerprint)
@@ -313,7 +313,7 @@ def decode_dnskey_rdata(pkt, offset, rdlen):
     """decode DNSKEY rdata: flags, proto, alg, pubkey; see RFC 4034"""
     flags, proto, alg = struct.unpack('!HBB', pkt[offset:offset+4])
     pubkey = pkt[offset+4:offset+rdlen]
-    if DEBUG:
+    if options['DEBUG']:
         zonekey = (flags >> 8) & 0x1;         # bit 7
         sepkey = flags & 0x1;                 # bit 15
         keytype = None
@@ -356,7 +356,7 @@ def decode_ds_rdata(pkt, offset, rdlen):
     """decode DS rdata: keytag, alg, digesttype, digest; see RFC 4034"""
     keytag, alg, digesttype = struct.unpack('!HBB', pkt[offset:offset+4])
     digest = hexdump(pkt[offset+4:offset+rdlen], separator='')
-    if DEBUG:
+    if options['DEBUG']:
         result = "%d %d(%s) %d(%s) %s" % \
                  (keytag, alg, dnssec_alg[alg], digesttype,
                   dnssec_digest[digesttype], digest)
@@ -379,7 +379,7 @@ def decode_rrsig_rdata(pkt, offset, rdlen):
              (qt.get_name(type_covered), alg, labels, orig_ttl,
               sig_exp, sig_inc, keytag, signer_name,
               base64.standard_b64encode(signature))
-    if DEBUG:
+    if options['DEBUG']:
         retval += " ; sigsize=%d" % (len(signature) * 8)
     return retval
 
