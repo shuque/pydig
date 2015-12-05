@@ -1,4 +1,4 @@
-.ds VN 1.00
+.ds VN 1.1.0
 .TH pydig 1 pydig
 .SH NAME
 pydig \- a DNS query tool written in Python
@@ -26,6 +26,7 @@ pydig \- a DNS query tool written in Python
 +edns0                    use EDNS0 with 4096 octet UDP payload
 +dnssec                   request DNSSEC RRs in response
 +cookie[=xxx]             send EDNS cookie option
++subnet=addr              send EDNS client subnet option
 +hex                      print hexdump of rdata field
 +walk                     walk (enumerate) a DNSSEC secured zone
 +0x20                     randomize case of query name (bit 0x20 hack)

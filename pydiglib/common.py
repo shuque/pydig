@@ -3,7 +3,7 @@ import os, sys
 
 PROGNAME       = os.path.basename(sys.argv[0])
 PROGDESC       = "a DNS query tool written in Python"
-VERSION        = "1.00"
+VERSION        = "1.1.0"
 RESOLV_CONF    = "/etc/resolv.conf"    # where to find default server
 DEFAULT_PORT   = 53
 ITIMEOUT       = 0.5                   # initial timeout in seconds
@@ -36,6 +36,7 @@ Options:
         +dnssec                   request DNSSEC RRs in response
         +hex                      print hexdump of rdata field
         +cookie[=xxx]             send EDNS cookie option
+        +subnet=addr              send EDNS client subnet option
         +walk                     walk (enumerate) a DNSSEC secured zone
         +0x20                     randomize case of query name (bit 0x20 hack)
         -4                        perform queries using IPv4

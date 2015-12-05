@@ -1,5 +1,5 @@
 
-import os, sys, errno, socket, select, struct, random
+import os, sys, errno, socket, select, struct, random, math
 
 from .options import options
 from .util import *
@@ -16,7 +16,44 @@ def mk_id():
         return random.randint(1,65535)
 
 
-def mk_optrr(edns_version, udp_payload, dnssec_ok=False, cookie=False):
+def mk_option_client_subnet(subnet):
+    """construct EDNS client subnet option"""
+    prefix_addr, prefix_len = subnet.split("/")
+    prefix_len = int(prefix_len)
+    addr_octets = int(math.ceil(prefix_len/8.0))
+    if prefix_addr.find('.') != -1:                    # IPv4
+        af = struct.pack('!H', 1)
+        address = socket.inet_pton(socket.AF_INET, prefix_addr)[0:addr_octets]
+    elif prefix_addr.find(':') != -1:                  # IPv6
+        af = struct.pack('!H', 2)
+        address = socket.inet_pton(socket.AF_INET6, prefix_addr)[0:addr_octets]
+    else:
+        raise ValueError("Invalid client subnet address")
+    src_prefix_len = struct.pack('B', prefix_len)
+    scope_prefix_len = '\x00'
+    optcode = struct.pack('!H', 8)
+    optdata = af + src_prefix_len + scope_prefix_len + address
+    optlen = struct.pack('!H', len(optdata))
+    return optcode + optlen + optdata
+
+
+def mk_option_cookie(cookie):
+    """Construct EDNS cookie option"""
+    optcode = struct.pack('!H', 10)
+    if cookie == True:
+        optdata = open("/dev/urandom").read(8)
+        optlen = struct.pack('!H', 8)
+    else:
+        try:
+            optdata = h2bin(cookie)
+        except:
+            raise ErrorMessage("Malformed cookie supplied: %s" % cookie)
+        optlen = struct.pack('!H', len(optdata))
+    return optcode + optlen + optdata
+
+
+def mk_optrr(edns_version, udp_payload, dnssec_ok=False, 
+             cookie=False, subnet=False):
     """Create EDNS0 OPT RR; see RFC 2671"""
     rdata     = ""
     rrname    = '\x00'                                   # empty domain
@@ -26,17 +63,9 @@ def mk_optrr(edns_version, udp_payload, dnssec_ok=False, cookie=False):
     else:         z = 0x0
     ttl   = struct.pack('!BBH', 0, edns_version, z)      # extended rcode
     if cookie:
-        optcode = struct.pack('!H', 10)
-        if cookie == True:
-            optdata = open("/dev/urandom").read(8)
-            optlen = struct.pack('!H', 8)
-        else:
-            try:
-                optdata = h2bin(cookie)
-            except:
-                raise ErrorMessage("Malformed cookie supplied: %s" % cookie)
-            optlen = struct.pack('!H', len(optdata))
-        rdata = optcode + optlen + optdata
+        rdata += mk_option_cookie(cookie)
+    if subnet:
+        rdata += mk_option_client_subnet(subnet)
     rdlen = struct.pack('!H', len(rdata))
     return "%s%s%s%s%s%s" % (rrname, rrtype, rrclass, ttl, rdlen, rdata)
 
@@ -62,7 +91,8 @@ def mk_request(query, sent_id, options):
         arcount = struct.pack('!H', 1)
         additional = mk_optrr(0, EDNS0_UDPSIZE, 
                               dnssec_ok=options["dnssec_ok"],
-                              cookie=options["cookie"]);
+                              cookie=options["cookie"],
+                              subnet=options["subnet"]);
     else:
         arcount = struct.pack('!H', 0)
         additional = ""
