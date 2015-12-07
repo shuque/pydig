@@ -1,5 +1,7 @@
 Todo List (ie. things I might implement in the future)
 
+* Support EDNS0 payload size setting
+* Support NSID, alg signalling, expire, keepalive, padding, chain
 * Move compression pointer count inside DNSresponse class
 * Failover to other nameserver addresses (v4, v6, multiple etc)?
 * UDP - ignore id mismatched responses and keep waiting till timeout
@@ -7,13 +9,9 @@ Todo List (ie. things I might implement in the future)
 * Check last AXFR record is SOA
 * Attach copyright/license
 * -d doesn't work any more?
-* Support EDNS0 payload size setting
-
 * Redo zonewalk() routines.
-
 * Persistent TCP:
-  - add pipelining
-
+  - add pipelining, and out of order response processing
 * Decode URI, and other new types of records
 * Implement +trace --> iterative resolution
 * Make sure TSIG record in response is the last record in additional section
