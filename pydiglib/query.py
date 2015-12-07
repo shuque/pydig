@@ -53,7 +53,7 @@ def mk_option_cookie(cookie):
 
 
 def mk_option_chainquery(chainquery):
-    """Construct EDNS cookie option"""
+    """Construct EDNS chain query option"""
     optcode = struct.pack('!H', 13)
     if chainquery == True:
         optdata = '\x00'
