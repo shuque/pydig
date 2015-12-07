@@ -37,6 +37,7 @@ Options:
         +hex                      print hexdump of rdata field
         +cookie[=xxx]             send EDNS cookie option
         +subnet=addr              send EDNS client subnet option
+        +chainquery[=name]        send EDNS chain query option
         +walk                     walk (enumerate) a DNSSEC secured zone
         +0x20                     randomize case of query name (bit 0x20 hack)
         -4                        perform queries using IPv4

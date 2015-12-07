@@ -52,8 +52,19 @@ def mk_option_cookie(cookie):
     return optcode + optlen + optdata
 
 
+def mk_option_chainquery(chainquery):
+    """Construct EDNS cookie option"""
+    optcode = struct.pack('!H', 13)
+    if chainquery == True:
+        optdata = '\x00'
+    else:
+        optdata = txt2domainname(chainquery)
+    optlen = struct.pack('!H', len(optdata))
+    return optcode + optlen + optdata
+
+
 def mk_optrr(edns_version, udp_payload, dnssec_ok=False, 
-             cookie=False, subnet=False):
+             cookie=False, subnet=False, chainquery=False):
     """Create EDNS0 OPT RR; see RFC 2671"""
     rdata     = ""
     rrname    = '\x00'                                   # empty domain
@@ -66,6 +77,8 @@ def mk_optrr(edns_version, udp_payload, dnssec_ok=False,
         rdata += mk_option_cookie(cookie)
     if subnet:
         rdata += mk_option_client_subnet(subnet)
+    if chainquery:
+        rdata += mk_option_chainquery(chainquery)
     rdlen = struct.pack('!H', len(rdata))
     return "%s%s%s%s%s%s" % (rrname, rrtype, rrclass, ttl, rdlen, rdata)
 
@@ -92,7 +105,8 @@ def mk_request(query, sent_id, options):
         additional = mk_optrr(0, EDNS0_UDPSIZE, 
                               dnssec_ok=options["dnssec_ok"],
                               cookie=options["cookie"],
-                              subnet=options["subnet"]);
+                              subnet=options["subnet"],
+                              chainquery=options["chainquery"]);
     else:
         arcount = struct.pack('!H', 0)
         additional = ""

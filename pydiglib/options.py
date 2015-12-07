@@ -24,6 +24,7 @@ options = dict(
     do_zonewalk=False, 
     cookie=False,
     subnet=False,
+    chainquery=False,
     do_0x20=False,
     ptr=False, 
     af=socket.AF_UNSPEC, 
@@ -96,6 +97,14 @@ def parse_args(arglist):
             options["use_edns0"] = True
             options["subnet"] = arg[8:]
             
+        elif arg == "+chainquery":
+            options["use_edns0"] = True
+            options["chainquery"] = True
+
+        elif arg.startswith("+chainquery="):
+            options["use_edns0"] = True
+            options["chainquery"] = arg[12:]
+
         elif arg == "+0x20":
             options["do_0x20"] = True
 
