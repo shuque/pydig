@@ -159,7 +159,7 @@ class DNSresponse:
                     rrname, rrtype, rrclass, offset = \
                             decode_question(self.pkt, offset)
                     answer_qname = pdomainname(rrname)
-                    if (not is_axfr):
+                    if (is_axfr):
                         continue
                     print "%s\t%s\t%s" % (answer_qname,
                                           qc.get_name(rrclass), 
