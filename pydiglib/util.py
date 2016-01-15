@@ -1,4 +1,4 @@
-import socket, struct, random
+import socket, struct, random, hashlib
 from .common import *
 
 class Struct:
@@ -187,3 +187,19 @@ def pdomainname(labels):
     else:
         return ".".join(labels)
 
+
+def uid2ownername(uid, qtype):
+    """Return OPENPGPKEY/SMIMEA ownername for given uid/email address"""
+    if qtype == 'OPENPGPKEY':
+        applabel = '_openpgpkey'
+    elif qtype == 'SMIMEA':
+        applabel = '_smimecert'
+    else:
+        raise ValueError('Invalid qtype for uid2owner')
+    localpart, rhs = uid.split('@')
+    h = hashlib.sha256()
+    h.update(localpart)
+    owner = "%s.%s.%s" % (h.hexdigest()[0:56], applabel, rhs)
+    if not owner.endswith('.'):
+        owner = owner + '.'
+    return owner
