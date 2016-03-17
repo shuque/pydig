@@ -27,7 +27,7 @@ Usage: {0} [list of options] <qname> [<qtype>] [<qclass>]
 Options:
         -h                        print program usage information
         @server                   server to query
-        -pNN                      use port NN
+        -pNN                      use port NN (default is port 53)
         -bIP                      use IP as source IP address
         +tcp                      send query via TCP
         +aaonly                   set authoritative answer bit
@@ -50,7 +50,7 @@ Options:
         -iNNN                     use specified message id
         -y<alg>:<name>:<key>      use specified TSIG alg, name, key
         +tls=auth|noauth          use TLS with|without authentication
-        +tls_port=N               use N as the DNS over TLS port number
+        +tls_port=N               use N as the TLS port (default is 853)
         +tls_fallback             Fallback from TLS to TCP on TLS failure
         +tls_hostname=name        Check hostname in TLS server certificate
 """.format(PROGNAME, PROGDESC, VERSION)
