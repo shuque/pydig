@@ -3,9 +3,10 @@ import os, sys
 
 PROGNAME       = os.path.basename(sys.argv[0])
 PROGDESC       = "a DNS query tool written in Python"
-VERSION        = "1.1.0"
+VERSION        = "1.2.0"
 RESOLV_CONF    = "/etc/resolv.conf"    # where to find default server
 DEFAULT_PORT   = 53
+DEFAULT_PORT_TLS = 853
 ITIMEOUT       = 0.5                   # initial timeout in seconds
 RETRIES        = 3                     # how many times to try
 BUFSIZE        = 65535                 # socket read/write buffer size
@@ -47,6 +48,10 @@ Options:
         -k/path/to/keyfile        use TSIG key in specified file
         -iNNN                     use specified message id
         -y<alg>:<name>:<key>      use specified TSIG alg, name, key
+        +tls=auth|noauth          use TLS with|without authentication
+        +tls_port=N               use N as the DNS over TLS port number
+        +tls_fallback             Fallback from TLS to TCP on TLS failure
+        +tls_hostname=name        Check hostname in TLS server certificate
 """.format(PROGNAME, PROGDESC, VERSION)
 
 

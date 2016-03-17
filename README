@@ -1,24 +1,17 @@
 Program:	pydig (a DNS query tool written in Python)
-Version:	1.1.0
+Version:	1.2.0
 Written by:	Shumon Huque <shuque@gmail.com>
 
 Description:
 
-	A small python program to perform DNS queries. It works mostly 
-	similarly to the dig program that comes with Bind. I wrote it 
-	mostly for fun, while trying to understand DNSSEC. And in general, 
-	for most queries, there is no reason to use it in preference to 
-	dig. However, it does a few things differently that I needed from 
-	time to time, such as: optionally presenting a hexdump of the 
-	resource data rather than decoding it; decoding the exponent in 
-	a RSA/SHA-1 DNSKEY; printing out names of DNSSEC related crypto 
-	hashes, algorithms and algorithm parameters, key sizes; counting 
-	how many compression references  were followed; implementing the 
-	0x20 bit case randomization hack; providing more detailed statistics 
-	on TSIG authenticated zone transfers, reporting query/response size 
-	amplification factor, etc. It also has an option to walk a DNSSEC 
-	secured zone and enumerate  all its resource records - this obviously 
-	only works on NSEC zones.
+	A program to perform DNS queries and exercise various existing
+	and emerging features of the DNS protocol. It works mostly 
+	similar to the dig program that comes with ISC BIND. I wrote
+	it mostly for fun, and for helping me to learn more esoteric
+	features of the DNS. Occasionally I use this to quickly prototype
+	proposed enhancements to the DNS. Some of the more recent
+	such features include EDNS client subnet, chain query, 
+	cookies, DNS over TLS, and more.
 
 	RR type and class codes (qtype and qclass) unknown to this 
 	program can be specified with the TYPE123 and CLASS123 syntax.
@@ -53,6 +46,10 @@ Options:
         -iNNN                     use specified message id
         -tNNN                     use this TSIG timestamp (secs since epoch)
         -y<alg>:<name>:<key>      use specified TSIG alg, name, key
+        +tls=auth|noauth          use TLS with|without authentication
+        +tls_port=N               use N as the DNS over TLS port number
+        +tls_fallback             Fallback from TLS to TCP on TLS failure
+        +tls_hostname=name        Check hostname in TLS server certificate
 
 Example usage:
 
@@ -66,12 +63,9 @@ Example usage:
        pydig @192.168.72.3 +walk secure.example.com
        pydig @192.168.14.7 -yhmac-md5:my.secret.key.:YWxidXMgZHVtYmxlZG9yZSByaWNoYXJkIGRhd2tpbnM= example.com axfr
        pydig @192.168.14.7 -yhmac-sha256:my.secret.key.:NBGFWFr+rR/uu14B94Ab1+u81M2DTqB65gOv16nG8Xw= example.com axfr
+       pydig @185.49.141.38 +tls=auth +tls_hostname=getdnsapi.net www.ietf.org AAAA
 
 Limitations:
-
-	Expects well formed (ie. correct) DNS responses. Otherwise 
-	it will likely generate an exception and terminate itself
-	ungracefully.
 
 	Certain combinations of options don't make any sense (eg.
 	+tcp and +edns0). pydig doesn't bother to check that, and 
@@ -82,13 +76,18 @@ Limitations:
 	supports HMAC-MD5/SHA1/SHA256/SHA384/SHA256. It doesn't yet
 	support GSS-TSIG.
 
-	It does not yet verify signatures in DNSSEC secured data.
+	It decodes but does not yet verify signatures in DNSSEC secured 
+	data.
 
 	It does not perform iterative resolution (eg. dig's +trace).
 
+	Specific features of TLS depend on the version of Python in
+	use. TLS server certificate verification and hostname 
+	verification require quite recent versions of Python 2.7.x.
+
 Pre-requisites:
 
-	Python 2.5 (or later)
+	Python 2.6 (or later)
 
 Platforms:
 
@@ -98,7 +97,7 @@ Platforms:
 		FreeBSD 9.x
 		Mac OS X 10.4 through 10.7
 
-	and with Python 2.3 - 2.7
+	and with Python 2.6 and 2.7.
 
 Installation:
 
@@ -106,8 +105,8 @@ Installation:
 
 Shumon Huque
 E-mail: shuque -at- gmail.com
-Web: https://www.huque.com/~shuque/
+Web: https://www.huque.com/
 
-Copyright (c) 2006 - 2014, Shumon Huque. 
+Copyright (c) 2006 - 2016, Shumon Huque. 
 All rights reserved. This program is free software; you can redistribute 
 it and/or modify it under the same terms of the GNU General Public License.

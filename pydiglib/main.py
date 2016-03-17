@@ -51,7 +51,19 @@ def main(args):
     # the rest is for non AXFR queries ..
 
     response = None
-    if not options["use_tcp"]:
+
+    if options["tls"]:
+        t1 = time.time()
+        responsepkt = send_request_tls(requestpkt, server_addr, 
+                                       options["tls_port"], family,
+                                       hostname=options["tls_hostname"])
+        t2 = time.time()
+        size_response = len(responsepkt)
+        print ";; TLS response from %s, %d bytes, in %.3f sec" % \
+              ( (server_addr, options["tls_port"]), size_response, (t2-t1))
+        response = DNSresponse(family, query, requestpkt, responsepkt, txid)
+
+    elif not options["use_tcp"]:
         t1 = time.time()
         (responsepkt, responder_addr) = \
                       send_request_udp(requestpkt, server_addr, port, family,
@@ -68,9 +80,12 @@ def main(args):
                 print "WARNING: Response from unexpected address %s" % \
                       responder_addr[0]
 
-    if options["use_tcp"] or (response and response.tc):
+    if options["use_tcp"] or (response and response.tc) \
+       or (options["tls"] and options["tls_fallback"] and not response):
         if (response and response.tc):
             print ";; UDP Response was truncated. Retrying using TCP ..."
+        if (options["tls"] and options["tls_fallback"] and not response):
+            print ";; TLS fallback to TCP ..."
         t1 = time.time()
         responsepkt = send_request_tcp2(requestpkt, server_addr, port, family)
         t2 = time.time()

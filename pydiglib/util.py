@@ -92,7 +92,7 @@ def sendSocket(s, message):
         while (octetsSent < len(message)):
             sentn = s.send(message[octetsSent:])
             if sentn == 0:
-                raise ValueError, "send() returned 0 bytes"
+                raise ErrorMessage("send() returned 0 bytes")
             octetsSent += sentn
     except Exception, diag:
         print("DEBUG: Exception: %s" % diag)
@@ -195,7 +195,7 @@ def uid2ownername(uid, qtype):
     elif qtype == 'SMIMEA':
         applabel = '_smimecert'
     else:
-        raise ValueError('Invalid qtype for uid2owner')
+        raise ErrorMessage('Invalid qtype (%s) for uid2owner' % qtype)
     localpart, rhs = uid.split('@')
     h = hashlib.sha256()
     h.update(localpart)

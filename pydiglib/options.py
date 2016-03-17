@@ -31,7 +31,40 @@ options = dict(
     do_tsig=False,
     tsig_sigtime=None, 
     unsigned_messages="", 
-    msgid=None)
+    msgid=None,
+    tls=False,
+    tls_auth=False,
+    tls_port=DEFAULT_PORT_TLS,
+    tls_fallback=False,
+    tls_hostname=None,
+)
+
+
+def set_tls_options(arg):
+    """Set TLS options: authentication, fallback, hostname ..
+       +tls={auth|noauth}
+       +tls_fallback
+       +tls_hostname={hostname}
+    """
+    if arg.startswith("+tls="):
+        options["tls"] = True
+        auth = arg[5:]
+        if auth == "auth":
+            options["tls_auth"] = True
+        elif auth == "noauth":
+            options["tls_auth"] = False
+        else:
+            raise ErrorMessage("Unsupported option: %s" % arg)
+    elif arg.startswith("+tls_port="):
+        options["tls_port"] = int(arg[9:])
+    elif arg == "+tls_fallback":
+        options["tls_fallback"] = True
+    elif arg.startswith("+tls_hostname="):
+        options["tls_hostname"] = arg[14:]
+    else:
+        raise ErrorMessage("Unsupported option: %s" % arg)
+
+    return
 
 
 def parse_args(arglist):
@@ -59,6 +92,9 @@ def parse_args(arglist):
 
         elif arg == "+tcp":
             options["use_tcp"] = True
+
+        elif arg.startswith("+tls"):
+            set_tls_options(arg)
 
         elif arg == "+aaonly":
             options["aa"] = 1

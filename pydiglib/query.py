@@ -6,6 +6,7 @@ from .util import *
 from .common import *
 from .dnsparam import *
 from .dnsmsg import *
+from .tls import *
 
 
 def mk_id():
@@ -28,7 +29,7 @@ def mk_option_client_subnet(subnet):
         af = struct.pack('!H', 2)
         address = socket.inet_pton(socket.AF_INET6, prefix_addr)[0:addr_octets]
     else:
-        raise ValueError("Invalid client subnet address")
+        raise ErrorMessage("Invalid client subnet address: %s" % prefix_addr)
     src_prefix_len = struct.pack('B', prefix_len)
     scope_prefix_len = '\x00'
     optcode = struct.pack('!H', 8)
@@ -173,7 +174,7 @@ def send_request_tcp(pkt, host, port, family):
     try:
         s.connect((host, port))
         if not sendSocket(s, pkt):
-            raise Exception, "send() on socket failed."
+            raise ErrorMessage("send() on socket failed.")
         lbytes = recvSocket(s, 2)
         if (len(lbytes) != 2):
             raise ErrorMessage("recv() on socket failed.")
@@ -199,7 +200,7 @@ def send_request_tcp2(pkt, host, port, family):
     try:
         s.connect((host, port))
         if not sendSocket(s, pkt):
-            raise Exception, "send() on socket failed."
+            raise ErrorMessage("send() on socket failed.")
     except socket.error, e:
         s.close()
         raise ErrorMessage("tcp socket send error: %s" % e)
@@ -224,6 +225,36 @@ def send_request_tcp2(pkt, host, port, family):
     return response
 
 
+def send_request_tls(pkt, host, port, family, hostname=None):
+    """Send the request packet using DNS over TLS"""
+
+    pkt = struct.pack("!H", len(pkt)) + pkt       # prepend 2-byte length
+    s = socket.socket(family, socket.SOCK_STREAM)
+    if options["srcip"]:
+        s.bind((options["srcip"], 0))
+    response = ""
+
+    ctx = get_ssl_context(hostname)
+    conn = get_ssl_connection(ctx, s, hostname)
+
+    try:
+        conn.connect((host, port))
+    except ssl.SSLError as e:
+        print("TLS error: %s" % e)
+    else:
+        if not sendSocket(conn, pkt):
+            raise ErrorMessage("send() on socket failed.")
+        lbytes = recvSocket(conn, 2)
+        if (len(lbytes) != 2):
+            raise ErrorMessage("recv() on socket failed.")
+        resp_len, = struct.unpack('!H', lbytes)
+        response = recvSocket(conn, resp_len)
+    finally:
+        conn.close()
+
+    return response
+
+
 def do_axfr(query, pkt, host, port, family):
     """AXFR uses TCP, and is answered by a sequence of response messages."""
 
@@ -235,7 +266,7 @@ def do_axfr(query, pkt, host, port, family):
     try:
         s.connect((host, port))
         if not sendSocket(s, pkt):
-            raise Exception, "send() on socket failed."
+            raise ErrorMessage("send() on socket failed.")
         while True:
             lbytes = recvSocket(s, 2)
             if not lbytes:
