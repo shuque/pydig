@@ -38,6 +38,10 @@ pydig \- a DNS query tool written in Python
 -iNNN                     use specified message id
 -tNNN                     use this TSIG timestamp (secs since epoch)
 -y<alg>:<name>:<key>      use specified TSIG alg, name, key
++tls=auth|noauth          use TLS with|without authentication
++tls_port=N               use N as the TLS port (default is 853)
++tls_fallback             Fallback from TLS to TCP on TLS failure
++tls_hostname=name        Check hostname in TLS server certificate
 .PP
 
 Example usage:
@@ -52,29 +56,21 @@ pydig @dns2.example.com -6 +hex www.example.com
 pydig @192.168.72.3 +walk secure.example.com
 pydig @192.168.14.7 -yhmac-md5:my.secret.key.:YWxidXMgZHVtYmxlZG9yZSByaWNoYXJkIGRhd2tpbnM= example.com axfr
 pydig @192.168.14.7 -yhmac-sha256:my.secret.key.:NBGFWFr+rR/uu14B94Ab1+u81M2DTqB65gOv16nG8Xw= example.com axfr
+pydig @185.49.141.38 +tls=auth +tls_hostname=getdnsapi.net www.ietf.org AAAA
 .fi
 .SH DESCRIPTION
 .I pydig
-is a small python program to perform DNS queries. It works mostly 
-similarly to the dig program that comes with bind. In general, for 
-most queries, there is no reason to use it in preference to dig. 
-However, it does a few things differently, such as optionally
-presenting a hexdump of the rdata rather than decoding it; 
-decoding the exponent in a RSA/SHA-1 DNSKEY; printing out 
-names of DNSSEC related crypto hashes, algorithms and algorithm 
-parameters, key sizes; counting how many compression references were 
-followed; implementing the 0x20-bit case randomization hack; providing 
-more detailed statistics on TSIG authenticated zone transfers, etc. It 
-also has an option to walk a DNSSEC secured zone and enumerate all its 
-resource records (assuming it isn't an NSEC3 signed zone).
+is a program to perform DNS queries and exercise various existing
+and emerging features of the DNS protocol. It works mostly
+similar to the dig program that comes with ISC BIND. I wrote
+it mostly for fun, and for helping me to learn more esoteric
+features of the DNS. Occasionally I use this to quickly prototype
+proposed enhancements to the DNS. Some of the more recent
+such features include EDNS client subnet, chain query,
+cookies, DNS over TLS, and more.
 .PP
 RR type and class codes (qtype and qclass) unknown to this 
 program can be specified with the TYPE123 and CLASS123 syntax.
-.PP
-This program is self contained, doesn't need to be installed
-in any particular location, and doesn't depend on any 3rd
-party modules. All it needs is a recent version of Python (and
-it's standard library).
 .PP
 Written in Python and tested on Solaris 8-11, Linux 2 and Mac OS X 
 10.4-10.5. Will probably work on most UNIX like platforms.
@@ -96,7 +92,11 @@ It does not yet verify signatures in DNSSEC secured data.
 .PP
 It does not perform iterative resolution (eg. dig's +trace).
 .PP
+Specific features of TLS depend on the version of Python in
+use. TLS server certificate verification and hostname
+verification require quite recent versions of Python 2.7.x.
+.PP
 .SH AUTHORS
-Shumon Huque <shuque@upenn.edu>
+Shumon Huque <shuque@gmail.com>
 .SH VERSION
 revision \*(VN
