@@ -9,6 +9,7 @@ DEFAULT_PORT   = 53
 DEFAULT_PORT_TLS = 853
 ITIMEOUT       = 0.5                   # initial timeout in seconds
 RETRIES        = 3                     # how many times to try
+TIMEOUT_MAX    = 10
 BUFSIZE        = 65535                 # socket read/write buffer size
 EDNS0_UDPSIZE  = 4096
 DEBUG          = False                 # for more debugging output (-d)

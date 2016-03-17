@@ -168,6 +168,7 @@ def send_request_tcp(pkt, host, port, family):
 
     pkt = struct.pack("!H", len(pkt)) + pkt       # prepend 2-byte length
     s = socket.socket(family, socket.SOCK_STREAM)
+    s.settimeout(TIMEOUT_MAX)
     if options["srcip"]:
         s.bind((options["srcip"], 0))
     response = ""
@@ -192,6 +193,7 @@ def send_request_tcp2(pkt, host, port, family):
 
     pkt = struct.pack("!H", len(pkt)) + pkt       # prepend 2-byte length
     s = socket.socket(family, socket.SOCK_STREAM)
+    s.settimeout(TIMEOUT_MAX)
     if options["srcip"]:
         s.bind((options["srcip"], 0))
     #s.setblocking(0)
@@ -201,7 +203,7 @@ def send_request_tcp2(pkt, host, port, family):
         s.connect((host, port))
         if not sendSocket(s, pkt):
             raise ErrorMessage("send() on socket failed.")
-    except socket.error, e:
+    except socket.error as e:
         s.close()
         raise ErrorMessage("tcp socket send error: %s" % e)
 
@@ -230,6 +232,7 @@ def send_request_tls(pkt, host, port, family, hostname=None):
 
     pkt = struct.pack("!H", len(pkt)) + pkt       # prepend 2-byte length
     s = socket.socket(family, socket.SOCK_STREAM)
+    s.settimeout(TIMEOUT_MAX)
     if options["srcip"]:
         s.bind((options["srcip"], 0))
     response = ""
@@ -239,6 +242,8 @@ def send_request_tls(pkt, host, port, family, hostname=None):
 
     try:
         conn.connect((host, port))
+    except socket.error as e:
+        print("socket error: %s" % e)
     except ssl.SSLError as e:
         print("TLS error: %s" % e)
     else:
