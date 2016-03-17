@@ -298,7 +298,7 @@ def decode_ipseckey_rdata(pkt, offset, rdlen):
 
 def decode_tlsa_rdata(rdata):
     """decode TLSA rdata: usage(1) selector(1) mtype(1) cadata;
-       see draft-ietf-dane-protocol-23"""
+       see RFC 6698"""
     usage, selector, mtype = struct.unpack("BBB", rdata[0:3])
     cadata = hexdump(rdata[3:], separator='')
     return "%d %d %d %s" % (usage, selector, mtype, cadata)
@@ -459,6 +459,15 @@ def decode_nsec3_rdata(pkt, offset, rdlen):
     return result
 
 
+def decode_caa_rdata(rdata):
+    """decode CAAA rdata: TLSA rdata: flags(1), tag-length, tag, value;
+       see RFC 6844"""
+    flags, taglen = struct.unpack("BB", rdata[0:2])
+    tag = rdata[2:2+taglen]
+    value = rdata[2+taglen:]
+    return "%d %s \"%s\"" % (flags, tag, value)
+
+
 def decode_rr(pkt, offset, hexrdata):
     """ Decode a resource record, given DNS packet and offset"""
 
@@ -509,6 +518,8 @@ def decode_rr(pkt, offset, hexrdata):
         rdata = decode_tlsa_rdata(rdata)
     elif rrtype == 61:                                       # OPENPGPKEY
         rdata = decode_openpgpkey_rdata(rdata)
+    elif rrtype == 257:                                      # CAA
+        rdata = decode_caa_rdata(rdata)
     elif rrtype == 250:                                      # TSIG
         tsig_name = pdomainname(domainname)
         tsig = options["tsig"]
