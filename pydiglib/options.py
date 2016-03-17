@@ -43,6 +43,7 @@ options = dict(
 def set_tls_options(arg):
     """Set TLS options: authentication, fallback, hostname ..
        +tls={auth|noauth}
+       +tls_port={N}
        +tls_fallback
        +tls_hostname={hostname}
     """
@@ -56,7 +57,7 @@ def set_tls_options(arg):
         else:
             raise ErrorMessage("Unsupported option: %s" % arg)
     elif arg.startswith("+tls_port="):
-        options["tls_port"] = int(arg[9:])
+        options["tls_port"] = int(arg[10:])
     elif arg == "+tls_fallback":
         options["tls_fallback"] = True
     elif arg.startswith("+tls_hostname="):
