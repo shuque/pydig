@@ -3,7 +3,7 @@ import ssl, socket, struct
 from .util import *
 
 
-def get_ssl_context(hostname):
+def get_ssl_context(tls_auth, hostname):
     """Return SSL context object"""
     try:
         ctx = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
@@ -17,7 +17,11 @@ def get_ssl_context(hostname):
         ctx.options |= ssl.OP_NO_TLSv1
 
         ctx.load_default_certs()
-        ctx.verify_mode = ssl.CERT_REQUIRED
+
+        if tls_auth:
+            ctx.verify_mode = ssl.CERT_REQUIRED
+        else:
+            ctx.verify_mode = ssl.CERT_NONE
 
         if hostname:
             try:

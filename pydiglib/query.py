@@ -234,7 +234,7 @@ def send_request_tls(pkt, host, port, family, hostname=None):
         s.bind((options["srcip"], 0))
     response = ""
 
-    ctx = get_ssl_context(hostname)
+    ctx = get_ssl_context(options["tls_auth"], hostname)
     conn = get_ssl_connection(ctx, s, hostname)
 
     try:
