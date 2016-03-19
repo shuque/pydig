@@ -16,12 +16,15 @@ def main(args):
     sys.excepthook = excepthook
     tsig = Tsig()                          # instantiate Tsig object
 
+    if len(args) == 1:
+        raise UsageError('')
+
     try:
         qname, qtype, qclass = parse_args(args[1:])
         qtype_val = qt.get_val(qtype)
         qclass_val = qc.get_val(qclass)
-    except (ValueError, IndexError, KeyError), diag:
-        raise UsageError("Incorrect program usage.")
+    except (ValueError, IndexError, KeyError) as e:
+        raise UsageError("Incorrect program usage: %s" % e)
 
     if options["do_0x20"]:
         qname = randomize_case(qname)
@@ -31,8 +34,8 @@ def main(args):
         server_addr, port, family, socktype = \
                      get_socketparams(options["server"], options["port"],
                                       options["af"], socket.SOCK_DGRAM)
-    except socket.gaierror, diag:
-        raise ErrorMessage("bad server: %s (%s)" % (options["server"], diag))
+    except socket.gaierror as e:
+        raise ErrorMessage("bad server: %s (%s)" % (options["server"], e))
         
     if options["do_zonewalk"]:
         zonewalk(server_addr, port, family, qname, options)
@@ -60,12 +63,12 @@ def main(args):
         t2 = time.time()
         if responsepkt:
             size_response = len(responsepkt)
-            print ";; TLS response from %s, %d bytes, in %.3f sec" % \
-                ( (server_addr, options["tls_port"]), size_response, (t2-t1))
+            print(";; TLS response from %s, %d bytes, in %.3f sec" %
+                  ( (server_addr, options["tls_port"]), size_response, (t2-t1)))
             response = DNSresponse(family, query, requestpkt, responsepkt, txid)
         else:
-            print ";; TLS response failure from %s, %d" % \
-                (server_addr, options["tls_port"])
+            print(";; TLS response failure from %s, %d" %
+                  (server_addr, options["tls_port"]))
             if not options["tls_fallback"]:
                 return 2
 
@@ -80,24 +83,24 @@ def main(args):
             raise ErrorMessage("No response from server")
         response = DNSresponse(family, query, requestpkt, responsepkt, txid)
         if not response.tc:
-            print ";; UDP response from %s, %d bytes, in %.3f sec" % \
-                  (responder_addr, size_response, (t2-t1))
+            print(";; UDP response from %s, %d bytes, in %.3f sec" %
+                  (responder_addr, size_response, (t2-t1)))
             if server_addr != "0.0.0.0" and responder_addr[0] != server_addr:
-                print "WARNING: Response from unexpected address %s" % \
-                      responder_addr[0]
+                print("WARNING: Response from unexpected address %s" %
+                      responder_addr[0])
 
     if options["use_tcp"] or (response and response.tc) \
        or (options["tls"] and options["tls_fallback"] and not response):
         if (response and response.tc):
-            print ";; UDP Response was truncated. Retrying using TCP ..."
+            print(";; UDP Response was truncated. Retrying using TCP ...")
         if (options["tls"] and options["tls_fallback"] and not response):
-            print ";; TLS fallback to TCP ..."
+            print(";; TLS fallback to TCP ...")
         t1 = time.time()
         responsepkt = send_request_tcp2(requestpkt, server_addr, port, family)
         t2 = time.time()
         size_response = len(responsepkt)
-        print ";; TCP response from %s, %d bytes, in %.3f sec" % \
-              ( (server_addr, port), size_response, (t2-t1))
+        print(";; TCP response from %s, %d bytes, in %.3f sec" %
+              ( (server_addr, port), size_response, (t2-t1)))
         response = DNSresponse(family, query, requestpkt, responsepkt, txid)
 
     response.print_preamble(options)

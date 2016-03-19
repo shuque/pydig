@@ -31,7 +31,7 @@ def mk_option_client_subnet(subnet):
     else:
         raise ErrorMessage("Invalid client subnet address: %s" % prefix_addr)
     src_prefix_len = struct.pack('B', prefix_len)
-    scope_prefix_len = '\x00'
+    scope_prefix_len = b'\x00'
     optcode = struct.pack('!H', 8)
     optdata = af + src_prefix_len + scope_prefix_len + address
     optlen = struct.pack('!H', len(optdata))
@@ -42,7 +42,7 @@ def mk_option_cookie(cookie):
     """Construct EDNS cookie option"""
     optcode = struct.pack('!H', 10)
     if cookie == True:
-        optdata = open("/dev/urandom").read(8)
+        optdata = os.urandom(8)
         optlen = struct.pack('!H', 8)
     else:
         try:
@@ -57,7 +57,7 @@ def mk_option_chainquery(chainquery):
     """Construct EDNS chain query option"""
     optcode = struct.pack('!H', 13)
     if chainquery == True:
-        optdata = '\x00'
+        optdata = b'\x00'
     else:
         optdata = txt2domainname(chainquery)
     optlen = struct.pack('!H', len(optdata))
@@ -67,8 +67,8 @@ def mk_option_chainquery(chainquery):
 def mk_optrr(edns_version, udp_payload, dnssec_ok=False, 
              cookie=False, subnet=False, chainquery=False):
     """Create EDNS0 OPT RR; see RFC 2671"""
-    rdata     = ""
-    rrname    = '\x00'                                   # empty domain
+    rdata     = b""
+    rrname    = b'\x00'                                   # empty domain
     rrtype    = struct.pack('!H', qt.get_val("OPT"))     # OPT type code
     rrclass = struct.pack('!H', udp_payload)             # udp payload
     if dnssec_ok: z = 0x8000
@@ -81,7 +81,7 @@ def mk_optrr(edns_version, udp_payload, dnssec_ok=False,
     if chainquery:
         rdata += mk_option_chainquery(chainquery)
     rdlen = struct.pack('!H', len(rdata))
-    return "%s%s%s%s%s%s" % (rrname, rrtype, rrclass, ttl, rdlen, rdata)
+    return (rrname + rrtype + rrclass + ttl + rdlen + rdata)
 
 
 def mk_request(query, sent_id, options):
@@ -110,7 +110,7 @@ def mk_request(query, sent_id, options):
                               chainquery=options["chainquery"]);
     else:
         arcount = struct.pack('!H', 0)
-        additional = ""
+        additional = b""
 
     flags = (qr << 15) + (opcode << 11) + (aa << 10) + (tc << 9) + \
             (rd << 8) + (ra << 7) + (z << 6) + (ad << 5) + (cd << 4) + rcode
@@ -118,22 +118,19 @@ def mk_request(query, sent_id, options):
 
     wire_qname = txt2domainname(query.qname)          # wire format domainname
 
-    question = "%s%s%s" % (wire_qname, struct.pack('!H', query.qtype),
-                           struct.pack('!H', query.qclass))
+    question = wire_qname + struct.pack('!H', query.qtype) + struct.pack('!H', query.qclass)
         
-    msg = "%s%s%s%s%s%s%s%s" % \
-          (packed_id, flags, qdcount, ancount, nscount, arcount,
-           question, additional)
+    msg = packed_id + flags + qdcount + ancount + nscount + arcount + \
+          question + additional
 
     if options["do_tsig"]:                      # sign message with TSIG
         tsig = options["tsig"]
         tsig_rr = tsig.mk_request_tsig(sent_id, msg)
         arcount, = struct.unpack('!H', arcount)
         arcount = struct.pack('!H', arcount+1)
-        additional = "%s%s" % (additional, tsig_rr)
-        msg = "%s%s%s%s%s%s%s%s" % \
-              (packed_id, flags, qdcount, ancount, nscount, arcount,
-               question, additional)
+        additional += tsig_rr
+        msg = packed_id + flags + qdcount + ancount + nscount + arcount + \
+              question + additional
 
     return msg
 
@@ -141,7 +138,7 @@ def mk_request(query, sent_id, options):
 def send_request_udp(pkt, host, port, family, itimeout, retries):
     """Send the request via UDP, with retries using exponential backoff"""
     gotresponse = False
-    responsepkt, responder_addr = "", ("", 0)
+    responsepkt, responder_addr = b"", ("", 0)
     s = socket.socket(family, socket.SOCK_DGRAM)
     if options["srcip"]:
         s.bind((options["srcip"], 0))
@@ -171,7 +168,7 @@ def send_request_tcp(pkt, host, port, family):
     s.settimeout(TIMEOUT_MAX)
     if options["srcip"]:
         s.bind((options["srcip"], 0))
-    response = ""
+    response = b""
     try:
         s.connect((host, port))
         if not sendSocket(s, pkt):
@@ -181,9 +178,9 @@ def send_request_tcp(pkt, host, port, family):
             raise ErrorMessage("recv() on socket failed.")
         resp_len, = struct.unpack('!H', lbytes)
         response = recvSocket(s, resp_len)
-    except socket.error, diag:
+    except socket.error as e:
         s.close()
-        raise ErrorMessage("tcp socket error: %s" % diag)
+        raise ErrorMessage("tcp socket error: %s" % e)
     s.close()
     return response
 
@@ -197,7 +194,7 @@ def send_request_tcp2(pkt, host, port, family):
     if options["srcip"]:
         s.bind((options["srcip"], 0))
     #s.setblocking(0)
-    response = ""
+    response = b""
 
     try:
         s.connect((host, port))
@@ -210,11 +207,11 @@ def send_request_tcp2(pkt, host, port, family):
     while True:
         try:
             (ready_r, ready_w, ready_e) = select.select([s], [], [])
-        except select.error, e:
-            if e.args[0] == errno.EINTR:
+        except select.error as e:
+            if e[0] == errno.EINTR:
                 continue
             else:
-                raise e
+                raise ErrorMessage("fatal error from select(): %s" % e)
         if ready_r and (s in ready_r):
             lbytes = recvSocket(s, 2)
             if (len(lbytes) != 2):
@@ -287,21 +284,21 @@ def do_axfr(query, pkt, host, port, family):
             response.decode_sections(is_axfr=True)
             rrtotal += response.ancount
 
-    except socket.timeout, diag:
+    except socket.timeout as e:
         pass
-    except socket.error, diag:
+    except socket.error as e:
         s.close()
-        raise ErrorMessage("tcp socket error: %s" % diag)
+        raise ErrorMessage("tcp socket error: %s" % e)
     s.close()
 
-    print "\n;; Total RRs transferred: %d, Total messages: %d" % \
-        (rrtotal, msgsizes.count)
-    print ";; Message sizes: %d max, %d min, %d average" % \
-          (msgsizes.max, msgsizes.min, msgsizes.average())
+    print("\n;; Total RRs transferred: %d, Total messages: %d" %
+          (rrtotal, msgsizes.count))
+    print(";; Message sizes: %d max, %d min, %d average" %
+          (msgsizes.max, msgsizes.min, msgsizes.average()))
     if options["do_tsig"]:
         tsig = options["tsig"]
-        print ";; TSIG records: %d, success: %d, failure: %d" % \
-              (tsig.tsig_total, tsig.verify_success, tsig.verify_failure)
+        print(";; TSIG records: %d, success: %d, failure: %d" %
+              (tsig.tsig_total, tsig.verify_success, tsig.verify_failure))
 
     return
 

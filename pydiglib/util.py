@@ -1,4 +1,4 @@
-import socket, struct, random, hashlib
+import socket, struct, random, hashlib, binascii
 from .common import *
 
 class Struct:
@@ -11,10 +11,12 @@ def random_init():
     return
 
 
-def hexdump(input, separator=' '):
-    """return a hexadecimal representation of the given string"""
-    hexlist = ["%02x" % ord(x) for x in input]
-    return separator.join(hexlist)
+def hexdump(inputbytes):
+    """return a hexadecimal string representation of given byte string"""
+    if PYVERSION == 2:
+        return ''.join(["%02x" % ord(x) for x in inputbytes])
+    else:
+        return binascii.hexlify(inputbytes).decode('ascii')
 
 
 def h2bin(x):
@@ -23,10 +25,13 @@ def h2bin(x):
 
 
 def packed2int(input):
-    """convert arbitrary sized bigendian packed string into an integer"""
+    """convert arbitrary sized bigendian byte-string into an integer"""
     sum = 0
     for (i, x) in enumerate(input[::-1]):
-        sum += ord(x) * 2**(8*i)
+        if PYVERSION == 2:
+            sum += ord(x) * 2**(8*i)
+        else:
+            sum += x * 2**(8*i)
     return sum
 
 
@@ -94,8 +99,8 @@ def sendSocket(s, message):
             if sentn == 0:
                 raise ErrorMessage("send() returned 0 bytes")
             octetsSent += sentn
-    except Exception, diag:
-        print("DEBUG: Exception: %s" % diag)
+    except Exception as e:
+        print("DEBUG: Exception: %s" % e)
         return False
     else:
         return True
@@ -103,13 +108,13 @@ def sendSocket(s, message):
 
 def recvSocket(s, numOctets):
     """Read and return numOctets of data from a connected socket"""
-    response = ""
+    response = b""
     octetsRead = 0
     while (octetsRead < numOctets):
         chunk = s.recv(numOctets-octetsRead)
         chunklen = len(chunk)
         if chunklen == 0:
-            return ""
+            return b""
         octetsRead += chunklen
         response += chunk
     return response
@@ -144,10 +149,11 @@ def hmac(key, data, func):
 def txt2domainname(input, canonical_form=False):
     """turn textual representation of a domain name into its wire format"""
     if input == ".":
-        d = '\x00'
+        d = b'\x00'
     else:
-        d = ""
+        d = b""
         for label in input.split('.'):
+            label = label.encode('ascii')
             if canonical_form:
                 label = label.lower()
             length = len(label)
@@ -161,7 +167,7 @@ def get_domainname(pkt, offset):
     labellist = []               # a domainname is a sequence of labels
     Done = False
     while not Done:
-        llen, = struct.unpack('B', pkt[offset])
+        llen, = struct.unpack('B', pkt[offset:offset+1])
         if (llen >> 6) == 0x3:                 # compression pointer, sec 4.1.4
             count_compression += 1
             c_offset, = struct.unpack('!H', pkt[offset:offset+2])
@@ -185,7 +191,7 @@ def pdomainname(labels):
     if len(labels) == 1:          # list with 1 empty label is the root
         return "."
     else:
-        return ".".join(labels)
+        return ".".join([x.decode() for x in labels])
 
 
 def uid2ownername(uid, qtype):
@@ -198,8 +204,8 @@ def uid2ownername(uid, qtype):
         raise ErrorMessage('Invalid qtype (%s) for uid2owner' % qtype)
     localpart, rhs = uid.split('@')
     h = hashlib.sha256()
-    h.update(localpart)
-    owner = "%s.%s.%s" % (h.hexdigest()[0:56], applabel, rhs)
+    h.update(localpart.encode('utf8'))
+    owner = "{}.{}.{}".format(h.hexdigest()[0:56], applabel, rhs)
     if not owner.endswith('.'):
         owner = owner + '.'
     return owner

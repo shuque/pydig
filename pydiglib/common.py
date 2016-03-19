@@ -4,6 +4,8 @@ import os, sys
 PROGNAME       = os.path.basename(sys.argv[0])
 PROGDESC       = "a DNS query tool written in Python"
 VERSION        = "1.2.0"
+
+PYVERSION      = sys.version_info.major
 RESOLV_CONF    = "/etc/resolv.conf"    # where to find default server
 DEFAULT_PORT   = 53
 DEFAULT_PORT_TLS = 853
@@ -57,7 +59,9 @@ Options:
 
 
 def dprint(input):
-    if DEBUG:        print "DEBUG:", input
+    if DEBUG:
+        print("DEBUG:", input)
+    return
 
 
 class ErrorMessage(Exception):
@@ -84,7 +88,7 @@ class UsageError(ErrorMessage):
 def excepthook(exc_type, exc_value, exc_traceback):
     """Print tracebacks for unexpected exceptions, not friendly errors."""
     if issubclass(exc_type, ErrorMessage):
-        print >>sys.stderr, exc_value
+        junk = sys.stderr.write("{}\n".format(exc_value))
     else:
         sys.__excepthook__(exc_type, exc_value, exc_traceback)
 

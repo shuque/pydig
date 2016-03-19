@@ -16,7 +16,8 @@ def get_ssl_context(tls_auth, hostname):
         ctx.options |= ssl.OP_NO_SSLv3
         ctx.options |= ssl.OP_NO_TLSv1
 
-        ctx.load_default_certs()
+        ## Windows may need: ctx.load_default_certs() - untested
+        ctx.set_default_verify_paths()
 
         if tls_auth:
             ctx.verify_mode = ssl.CERT_REQUIRED

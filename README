@@ -87,7 +87,7 @@ Limitations:
 
 Pre-requisites:
 
-	Python 2.6 (or later)
+	Python 2.7 (or later) or Python 3.x
 
 Platforms:
 
@@ -97,7 +97,7 @@ Platforms:
 		FreeBSD 9.x
 		Mac OS X 10.4 through 10.7
 
-	and with Python 2.6 and 2.7.
+	and with Python 2.7.x and Python 3.x.
 
 Installation:
 

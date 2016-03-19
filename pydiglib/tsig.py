@@ -180,12 +180,12 @@ class Tsig:
         computed_mac = hmac(self.key, input_data, self.function)
         # Support Truncation: compare only first self.response.mac_size bits
         if computed_mac[0:self.response.mac_size] != self.response.mac[0:self.response.mac_size]:
-            print "WARNING: TSIG record verification failed."
+            print("WARNING: TSIG record verification failed.")
             self.verify_failure += 1
         else:
             self.verify_success += 1
         if abs(self.response.sigtime - int(time.time())) > self.request.fudge:
-            print "WARNING: TSIG signature time exceeds clock skew."
+            print("WARNING: TSIG signature time exceeds clock skew.")
 
         self.prior_digest = self.response.mac          # for AXFR
         return

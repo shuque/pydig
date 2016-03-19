@@ -38,15 +38,15 @@ def print_answer_rr(server_addr, port, family, qname, qtype, options):
     for i in range(response.ancount):
         rrname, rrtype, rrclass, ttl, rdata, offset = \
                     decode_rr(r, offset, False)
-        print "%s\t%d\t%s\t%s\t%s" % \
+        print("%s\t%d\t%s\t%s\t%s" % 
               (pdomainname(rrname), ttl,
-               qc.get_name(rrclass), qt.get_name(rrtype), rdata)
+               qc.get_name(rrclass), qt.get_name(rrtype), rdata))
     return
     
 
 def zonewalk(server_addr, port, family, qname, options):
     """perform zone walk of zone containing the specified qname"""
-    print ";;\n;; Performing walk of zone containing %s\n;;" % qname
+    print(";;\n;; Performing walk of zone containing %s\n;;" % qname)
     start_qname = qname
     nsec_count = 0
     options["use_edns0"] = True

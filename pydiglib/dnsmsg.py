@@ -89,33 +89,33 @@ class DNSresponse:
                   overhead * math.ceil(size_response/(1500.0-overhead))
         amp2 = w_rsize/w_qsize
 
-        print ";; Size query=%d, response=%d, amp1=%.2f amp2=%.2f" % \
-            (size_query, size_response, amp1, amp2)
+        print(";; Size query=%d, response=%d, amp1=%.2f amp2=%.2f" %
+              (size_query, size_response, amp1, amp2))
     
     def print_preamble(self, options):
         """Print preamble of a DNS response message"""
         if options["do_0x20"]:
-            print ";; 0x20-hack qname: %s" % self.query.qname
-        print ";; rcode=%d(%s), id=%d" % \
-            (self.rcode, rc.get_name(self.rcode), self.id)
-        print ";; qr=%d opcode=%d aa=%d tc=%d rd=%d ra=%d z=%d ad=%d cd=%d" % \
-            (self.qr,
-             self.opcode,
-             self.aa,
-             self.tc,
-             self.rd,
-             self.ra,
-             self.z,
-             self.ad,
-             self.cd)
-        print ";; question=%d, answer=%d, authority=%d, additional=%d" % \
-            (self.qdcount, self.ancount, self.nscount, self.arcount)
+            print(";; 0x20-hack qname: %s" % self.query.qname)
+        print(";; rcode=%d(%s), id=%d" %
+              (self.rcode, rc.get_name(self.rcode), self.id))
+        print(";; qr=%d opcode=%d aa=%d tc=%d rd=%d ra=%d z=%d ad=%d cd=%d" %
+              (self.qr,
+               self.opcode,
+               self.aa,
+               self.tc,
+               self.rd,
+               self.ra,
+               self.z,
+               self.ad,
+               self.cd))
+        print(";; question=%d, answer=%d, authority=%d, additional=%d" %
+              (self.qdcount, self.ancount, self.nscount, self.arcount))
         self.print_ampratio()
 
     def print_rr(self, rrname, ttl, rrtype, rrclass, rdata):
-        print "%s\t%d\t%s\t%s\t%s" % \
-            (pdomainname(rrname), ttl,
-             qc.get_name(rrclass), qt.get_name(rrtype), rdata)
+        print("%s\t%d\t%s\t%s\t%s" %
+              (pdomainname(rrname), ttl,
+               qc.get_name(rrclass), qt.get_name(rrtype), rdata))
         return
 
     def print_rrs(offset, section_num, section_name, rrcount):
@@ -125,15 +125,15 @@ class DNSresponse:
                         decode_question(self.pkt, offset)
                 answer_qname = pdomainname(rrname)
                 if self.query.qtype != 252:
-                    print "%s\t%s\t%s" % (answer_qname,
+                    print("%s\t%s\t%s" % (answer_qname,
                                           qc.get_name(rrclass),
-                                          qt.get_name(rrtype))
+                                          qt.get_name(rrtype)))
             else:
                 rrname, rrtype, rrclass, ttl, rdata, offset = \
                     decode_rr(self.pkt, offset, options["hexrdata"])
-                print "%s\t%d\t%s\t%s\t%s" % \
-                    (pdomainname(rrname), ttl,
-                     qc.get_name(rrclass), qt.get_name(rrtype), rdata)
+                print("%s\t%d\t%s\t%s\t%s" %
+                      (pdomainname(rrname), ttl,
+                       qc.get_name(rrclass), qt.get_name(rrtype), rdata))
 
         return offset
 
@@ -143,7 +143,7 @@ class DNSresponse:
                                       options["do_0x20"])) \
                 or (qtype != self.query.qtype) \
                 or (qclass != self.query.qclass):
-                print "*** WARNING: Answer didn't match question!\n"
+                print("*** WARNING: Answer didn't match question!\n")
         return
 
     def decode_sections(self, is_axfr=False):
@@ -153,7 +153,7 @@ class DNSresponse:
         for (secname, rrcount) in zip(self.sections, 
                      [self.qdcount, self.ancount, self.nscount, self.arcount]):
             if rrcount and (not is_axfr):
-                print "\n;; %s SECTION:" % secname
+                print("\n;; %s SECTION:" % secname)
             if secname == "QUESTION":
                 for i in range(rrcount):
                     rrname, rrtype, rrclass, offset = \
@@ -161,9 +161,9 @@ class DNSresponse:
                     answer_qname = pdomainname(rrname)
                     if (is_axfr):
                         continue
-                    print "%s\t%s\t%s" % (answer_qname,
+                    print("%s\t%s\t%s" % (answer_qname,
                                           qc.get_name(rrclass), 
-                                          qt.get_name(rrtype))
+                                          qt.get_name(rrtype)))
                     self.question_matched(answer_qname, rrtype, rrclass)
             else:
                 for i in range(rrcount):
@@ -186,14 +186,14 @@ def print_optrr(rrclass, ttl, rdata):
     ercode, version, z = struct.unpack('!BBH', packed_ttl)
     flags = []
     if z & 0x8000: flags.append("do")                  # DNSSEC OK bit
-    print ";; OPT pseudo RR: edns_version=%d, udp_payload=%d, flags=%s, ercode=%d" % \
-          (version, rrclass, ' '.join(flags), ercode)
+    print(";; OPT RR: edns_version=%d, udp_payload=%d, flags=%s, ercode=%d" %
+          (version, rrclass, ' '.join(flags), ercode))
     blob = rdata
     while blob:
         ocode, olen = struct.unpack('!HH', blob[:4])
         odesc = edns_opt.get(ocode, "Unknown")
-        print ";; OPT code=%d (%s), length=%d" % (ocode, odesc, olen)
-        print ";; DATA: %s" % hexdump(blob[4:4+olen], separator='')
+        print(";; OPT code=%d (%s), length=%d" % (ocode, odesc, olen))
+        print(";; DATA: %s" % hexdump(blob[4:4+olen]))
         blob = blob[4+olen:]
 
 
@@ -207,7 +207,7 @@ def decode_question(pkt, offset):
 
 def generic_rdata_encoding(rdata, rdlen):
     """return generic encoding of rdata for unknown types; see RFC 3597"""
-    return "\# %d %s" % (rdlen, hexdump(rdata, separator=''))
+    return "\# %d %s" % (rdlen, hexdump(rdata))
 
     
 def decode_txt_rdata(rdata, rdlen):
@@ -216,9 +216,9 @@ def decode_txt_rdata(rdata, rdlen):
     txtstrings = []
     position = 0
     while position < rdlen:
-        slen, = struct.unpack('B', rdata[position])
+        slen, = struct.unpack('B', rdata[position:position+1])
         s = rdata[position+1:position+1+slen]
-        s = '"%s"' % s.replace('"', '\\"')
+        s = '"{}"'.format(s.replace(b'"', b'\\"').decode())
         txtstrings.append(s)
         position += 1 + slen
     return ' '.join(txtstrings)
@@ -247,7 +247,7 @@ def decode_srv_rdata(pkt, offset):
 def decode_sshfp_rdata(pkt, offset, rdlen):
     """decode SSHFP rdata: alg, fp_type, fingerprint; see RFC 4255"""
     alg, fptype = struct.unpack('BB', pkt[offset:offset+2])
-    fingerprint = hexdump(pkt[offset+2:offset+rdlen], separator='')
+    fingerprint = hexdump(pkt[offset+2:offset+rdlen])
     if options['DEBUG']:
         rdata = "%d(%s) %d(%s) %s" % \
                 (alg, sshfp_alg.get(alg, "unknown"),
@@ -292,21 +292,21 @@ def decode_ipseckey_rdata(pkt, offset, rdlen):
         pubkey = ""
     else:
         pubkeylen = rdlen - (position - offset)
-        pubkey = base64.standard_b64encode(pkt[position:position+pubkeylen])
-    return "%d %d %d %s %s" % (prec, gwtype, alg, gw, pubkey)
+        pubkey = base64.standard_b64encode(pkt[position:position+pubkeylen]).decode('ascii')
+    return "{} {} {} {} {}".format(prec, gwtype, alg, gw, pubkey)
 
 
 def decode_tlsa_rdata(rdata):
     """decode TLSA rdata: usage(1) selector(1) mtype(1) cadata;
        see RFC 6698"""
     usage, selector, mtype = struct.unpack("BBB", rdata[0:3])
-    cadata = hexdump(rdata[3:], separator='')
+    cadata = hexdump(rdata[3:])
     return "%d %d %d %s" % (usage, selector, mtype, cadata)
 
 
 def decode_openpgpkey_rdata(rdata):
     """decode OPENPGPKEY rdata: base64-string"""
-    return "%s" % base64.standard_b64encode(rdata)
+    return "{}".format(base64.standard_b64encode(rdata).decode('ascii'))
 
 
 def decode_dnskey_rdata(pkt, offset, rdlen):
@@ -331,7 +331,7 @@ def decode_dnskey_rdata(pkt, offset, rdlen):
                 exponent = packed2int(pubkey[1:1+elen])
                 modulus_len = len(pubkey[1+elen:]) * 8
             else:                     # length field is 1 octet
-                elen, = struct.unpack('B', pubkey[0])
+                elen, = struct.unpack('B', pubkey[0:1])
                 exponent = packed2int(pubkey[1:1+elen])
                 modulus_len = len(pubkey[1+elen:]) * 8
             comments = comments + ", e=%d modulus_size=%d" % \
@@ -343,19 +343,20 @@ def decode_dnskey_rdata(pkt, offset, rdlen):
             # The pubkey is the concatenation of 2 curve points, so
             # for ECDSAP384, the size is 768 bits.
             comments = comments + ", size=%d" % (len(pubkey) * 8)
-        result = "%d %d %d  %s ; %s" % \
-                 (flags, proto, alg, base64.standard_b64encode(pubkey), 
-                  comments)
+        result = "{} {} {} {} ; {}".format(
+            flags, proto, alg,
+            base64.standard_b64encode(pubkey).decode('ascii'), comments)
     else:
-        result = "%d %d %d %s" % \
-                 (flags, proto, alg, base64.standard_b64encode(pubkey))
+        result = "{} {} {} {}".format(
+            flags, proto, alg,
+            base64.standard_b64encode(pubkey).decode('ascii'))
     return result
 
 
 def decode_ds_rdata(pkt, offset, rdlen):
     """decode DS rdata: keytag, alg, digesttype, digest; see RFC 4034"""
     keytag, alg, digesttype = struct.unpack('!HBB', pkt[offset:offset+4])
-    digest = hexdump(pkt[offset+4:offset+rdlen], separator='')
+    digest = hexdump(pkt[offset+4:offset+rdlen])
     if options['DEBUG']:
         result = "%d %d(%s) %d(%s) %s" % \
                  (keytag, alg, dnssec_alg[alg], digesttype,
@@ -375,10 +376,10 @@ def decode_rrsig_rdata(pkt, offset, rdlen):
     d, offset = get_domainname(pkt, offset+18)
     signer_name = pdomainname(d)
     signature = pkt[offset:end_rdata]
-    retval = "%s %d %d %d %s %s %d %s %s" % \
-             (qt.get_name(type_covered), alg, labels, orig_ttl,
-              sig_exp, sig_inc, keytag, signer_name,
-              base64.standard_b64encode(signature))
+    retval = "{} {} {} {} {} {} {} {} {}".format(
+        qt.get_name(type_covered), alg, labels, orig_ttl,
+        sig_exp, sig_inc, keytag, signer_name,
+        base64.standard_b64encode(signature).decode('ascii'))
     if options['DEBUG']:
         retval += " ; sigsize=%d" % (len(signature) * 8)
     return retval
@@ -419,7 +420,7 @@ def decode_nsec3param_rdata(pkt, offset, rdlen):
     
     hashalg, flags, iterations, saltlen = struct.unpack('!BBHB',
                                                         pkt[offset:offset+5])
-    salt = hexdump(pkt[offset+5:offset+5+saltlen], separator='')
+    salt = hexdump(pkt[offset+5:offset+5+saltlen])
     result = "%d %d %d %s" % (hashalg, flags, iterations, salt)
     return result
 
@@ -437,7 +438,7 @@ def decode_nsec3_rdata(pkt, offset, rdlen):
     end_rdata = offset + rdlen
     hashalg, flags, iterations, saltlen = struct.unpack('!BBHB',
                                                         pkt[offset:offset+5])
-    salt = hexdump(pkt[offset+5:offset+5+saltlen], separator='')
+    salt = hexdump(pkt[offset+5:offset+5+saltlen])
     offset += (5 + saltlen)
     hashlen, = struct.unpack('!B', pkt[offset:offset+1])
     offset += 1
@@ -465,7 +466,7 @@ def decode_caa_rdata(rdata):
     flags, taglen = struct.unpack("BB", rdata[0:2])
     tag = rdata[2:2+taglen]
     value = rdata[2+taglen:]
-    return "%d %s \"%s\"" % (flags, tag, value)
+    return "{} {} \"{}\"".format(flags, tag.decode(), value.decode())
 
 
 def decode_rr(pkt, offset, hexrdata):
@@ -478,7 +479,7 @@ def decode_rr(pkt, offset, hexrdata):
     offset += 10
     rdata = pkt[offset:offset+rdlen]
     if hexrdata:
-        rdata = hexdump(rdata, separator='')
+        rdata = hexdump(rdata)
     elif rrtype == 1:                                        # A
         rdata = socket.inet_ntop(socket.AF_INET, rdata)
     elif rrtype in [2, 5, 12, 39]:                           # NS, CNAME, PTR
