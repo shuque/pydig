@@ -122,26 +122,29 @@ def recvSocket(s, numOctets):
 
 def xor_string(a, b):
     """bitwise XOR bytes in a and b and return concatenated result"""
-    result = ''
+    result = b''
     for (x, y) in zip(a, b):
-        result += chr(ord(x) ^ ord(y))
+        if PYVERSION == 2:
+            result += struct.pack('B', (ord(x) ^ ord(y)))
+        else:
+            result += struct.pack('B', (x ^ y))
     return result
 
 
 def hmac(key, data, func):
     """HMAC algorithm; see RFC 2104, 4635"""
-    BLOCKSIZE = 64                             # 64 bytes = 512 bits
-    ipad = '\x36' * BLOCKSIZE
-    opad = '\x5c' * BLOCKSIZE
+    BLOCKSIZE = 64                                  # 64 bytes = 512 bits
+    ipad = b'\x36' * BLOCKSIZE
+    opad = b'\x5c' * BLOCKSIZE
 
-    key = "%s%s" % (key, '\x00' * (BLOCKSIZE - len(key)))  # pad to blocksize
+    key = key + b'\x00' * (BLOCKSIZE - len(key))    # pad to blocksize
 
     m = func()
-    m.update("%s%s" % (xor_string(key, ipad), data))
+    m.update(xor_string(key, ipad) + data)
     r1 = m.digest()
 
     m = func()
-    m.update("%s%s" % (xor_string(key, opad), r1))
+    m.update(xor_string(key, opad) + r1)
 
     return m.digest()
 

@@ -169,7 +169,7 @@ def parse_args(arglist):
         elif arg.startswith("-y"):
             # -y overrides -k, if both are specified
             alg, name, key = arg[2:].split(":")
-            key = base64.decodestring(key)
+            key = base64.decodestring(key.encode())
             tsig.setkey(name, key, alg)
             options["do_tsig"] = True
 

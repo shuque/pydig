@@ -389,7 +389,10 @@ def decode_typebitmap(windownum, bitmap):
     """decode NSEC style type bitmap into list of RR types; see RFC 4034"""
     rrtypelist = []
     for (charpos, c) in enumerate(bitmap):
-        value, = struct.unpack('B', c)
+        if PYVERSION == 2:
+            value, = struct.unpack('B', c)
+        else:
+            value = c
         for i in range(8):
             isset = (value << i) & 0x80
             if isset:
@@ -432,8 +435,12 @@ def decode_nsec3_rdata(pkt, offset, rdlen):
     # alphabet used by NSEC3 (see RFC 4648, Section 7). This alphabet
     # has the property that encoded data maintains its sort order when
     # compared bitwise.
-    b32_to_ext_hex = string.maketrans('ABCDEFGHIJKLMNOPQRSTUVWXYZ234567',
-                                      '0123456789ABCDEFGHIJKLMNOPQRSTUV')
+    if PYVERSION == 2:
+        b32_to_ext_hex = string.maketrans(b'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567',
+                                          b'0123456789ABCDEFGHIJKLMNOPQRSTUV')
+    else:
+        b32_to_ext_hex = bytes.maketrans(b'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567',
+                                         b'0123456789ABCDEFGHIJKLMNOPQRSTUV')
 
     end_rdata = offset + rdlen
     hashalg, flags, iterations, saltlen = struct.unpack('!BBHB',

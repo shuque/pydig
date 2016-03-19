@@ -30,7 +30,7 @@ def read_tsig_params(filename):
 def mk_tsig_sigtime(sigtime):
     """make 48-bit TSIG signature time field; see RFC 2845"""
     """this will need to be updated before Jan 19th 2038 :-)"""
-    return '\x00\x00' + struct.pack('!I', sigtime)  # 48-bits
+    return b'\x00\x00' + struct.pack('!I', sigtime)  # 48-bits
 
 
 class Tsig:
@@ -78,20 +78,17 @@ class Tsig:
         tsig_fudge = struct.pack('!H', self.request.fudge)
         tsig_error = struct.pack('!H', 0)                     # NOERROR
         tsig_otherlen = struct.pack('!H', 0)
-        data = "%s%s%s%s%s%s%s%s%s" % (msg, tsig_name, tsig_class, tsig_ttl,
-                                       tsig_alg, tsig_sigtime, tsig_fudge,
-                                       tsig_error, tsig_otherlen)
+        data = (msg + tsig_name + tsig_class + tsig_ttl + tsig_alg +
+                tsig_sigtime + tsig_fudge + tsig_error + tsig_otherlen)
         mac = hmac(self.key, data, self.function)
         mac_size = struct.pack('!H', len(mac))
         self.request.mac = mac
         self.origid = struct.pack('!H', msgid)
-        rdata = "%s%s%s%s%s%s%s%s" % (tsig_alg, tsig_sigtime, tsig_fudge,
-                                      mac_size, mac, self.origid, tsig_error,
-                                      tsig_otherlen)
+        rdata = (tsig_alg + tsig_sigtime + tsig_fudge +
+                 mac_size + mac + self.origid + tsig_error + tsig_otherlen)
         rdlen = struct.pack('!H', len(rdata))
-        self.request.tsig = "%s%s%s%s%s%s" % \
-                            (tsig_name, tsig_type, tsig_class, tsig_ttl,
-                             rdlen, rdata)
+        self.request.tsig = (tsig_name + tsig_type + tsig_class + tsig_ttl +
+                             rdlen + rdata)
         return self.request.tsig
     
     def decode_tsig_rdata(self, pkt, offset, rdlen, tsig_name, tsig_offset):
@@ -128,10 +125,10 @@ class Tsig:
                   rc.get_name(self.response.error),
                   self.response.otherlen)
         if self.response.otherlen != 0:          # only for BADTIME ercode
-            self.response.otherdata = str(pkt[offset:offset+otherlen])
-            result += self.response.otherdata
+            self.response.otherdata = pkt[offset:offset+otherlen]
+            result += str(self.response.otherdata)
         else:
-            self.response.otherdata = ""
+            self.response.otherdata = b""
         self.verify_tsig()
         return result
 
@@ -145,15 +142,13 @@ class Tsig:
             raise ErrorMessage("encountered unknown TSIG key name: %s" %
                                self.response.tsig_name)
 
-        request_mac = "%s%s" % \
-                      (struct.pack('!H', len(self.request.mac)),
+        request_mac = (struct.pack('!H', len(self.request.mac)) +
                        self.request.mac)
 
         data = self.response.msg[:self.response.tsig_offset]
         arcount, = struct.unpack('!H', data[10:12])
-        dns_message = "%s%s%s%s" % \
-                      (struct.pack('!H', self.response.origid), data[2:10],
-                       struct.pack('!H', arcount-1), data[12:])
+        dns_message = (struct.pack('!H', self.response.origid) + data[2:10] +
+                       struct.pack('!H', arcount-1) + data[12:])
 
         tsig_name = txt2domainname(self.response.tsig_name,
                                    canonical_form=True)
@@ -165,18 +160,16 @@ class Tsig:
         tsig_error = struct.pack('!H', self.response.error)
         tsig_otherlen = struct.pack('!H', self.response.otherlen)
         tsig_otherdata = self.response.otherdata
-        tsig_vars = "%s%s%s%s%s%s%s%s%s" % \
-                    (tsig_name, tsig_class, tsig_ttl, tsig_alg, tsig_sigtime,
-                     tsig_fudge, tsig_error, tsig_otherlen, tsig_otherdata)
+        tsig_vars = (tsig_name + tsig_class + tsig_ttl + tsig_alg + 
+                     tsig_sigtime + tsig_fudge + tsig_error +
+                     tsig_otherlen + tsig_otherdata)
 
         if self.prior_digest:
-            input_data = "%s%s%s%s%s" % \
-                         (struct.pack('!H', len(self.prior_digest)),
-                          self.prior_digest,
-                          dns_message, tsig_sigtime, tsig_fudge)
+            input_data = (struct.pack('!H', len(self.prior_digest)) +
+                          self.prior_digest + 
+                          dns_message + tsig_sigtime + tsig_fudge)
         else:
-            input_data = "%s%s%s" % \
-                         (request_mac, dns_message, tsig_vars)
+            input_data = (request_mac + dns_message + tsig_vars)
         computed_mac = hmac(self.key, input_data, self.function)
         # Support Truncation: compare only first self.response.mac_size bits
         if computed_mac[0:self.response.mac_size] != self.response.mac[0:self.response.mac_size]:
