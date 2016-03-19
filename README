@@ -1,5 +1,5 @@
 Program:	pydig (a DNS query tool written in Python)
-Version:	1.2.0
+Version:	1.3.0
 Written by:	Shumon Huque <shuque@gmail.com>
 
 Description:
@@ -94,7 +94,7 @@ Platforms:
 	Tested on the following platforms:
 		Solaris 8, 9, 10, and 11
 		Linux 2.x
-		FreeBSD 9.x
+		FreeBSD 9.x and 10.x
 		Mac OS X 10.4 through 10.7
 
 	and with Python 2.7.x and Python 3.x.
