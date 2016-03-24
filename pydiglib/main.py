@@ -37,11 +37,12 @@ def main(args):
     except socket.gaierror as e:
         raise ErrorMessage("bad server: %s (%s)" % (options["server"], e))
         
+    random_init()
+
     if options["do_zonewalk"]:
         zonewalk(server_addr, port, family, qname, options)
         sys.exit(0)
 
-    random_init()
     txid = mk_id()
     tc = 0
     requestpkt = mk_request(query, txid, options)
