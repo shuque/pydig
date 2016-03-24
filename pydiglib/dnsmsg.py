@@ -33,6 +33,7 @@ class DNSresponse:
     ra = None
     z = None
     rcode = None
+    ercode = None
     cnt_compression = 0
     # sections: list of tuples of (text name, rrcount)
     sections = [ "QUESTION", "ANSWER", "AUTHORITY", "ADDITIONAL" ]
@@ -186,8 +187,8 @@ def print_optrr(rrclass, ttl, rdata):
     ercode, version, z = struct.unpack('!BBH', packed_ttl)
     flags = []
     if z & 0x8000: flags.append("do")                  # DNSSEC OK bit
-    print(";; OPT RR: edns_version=%d, udp_payload=%d, flags=%s, ercode=%d" %
-          (version, rrclass, ' '.join(flags), ercode))
+    print(";; OPT: edns_version=%d, udp_payload=%d, flags=%s, ercode=%d(%s)" %
+          (version, rrclass, ' '.join(flags), ercode, rc.get_name(ercode)))
     blob = rdata
     while blob:
         ocode, olen = struct.unpack('!HH', blob[:4])
