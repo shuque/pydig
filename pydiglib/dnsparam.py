@@ -134,6 +134,7 @@ DICT_RCODE = {
     "BADNAME": 20,
     "BADALG": 21,
     "BADTRUNC": 22,
+    "BADCOOKIE": 23,
 }
 
 # Instantiate the DNS parameter classes at the module level, since they
