@@ -64,11 +64,17 @@ def ip2ptr(address):
     try:
         if address.find('.') != -1:                             # IPv4 address
             packed = socket.inet_pton(socket.AF_INET, address)
-            octetlist = ["%d" % ord(x) for x in packed]
+            if PYVERSION == 2:
+                octetlist = ["%d" % ord(x) for x in packed]
+            else:
+                octetlist = ["%d" % x for x in packed]
             ptrowner = "%s%s" % ('.'.join(octetlist[::-1]), v4_suffix)
         elif address.find(':') != -1:                           # IPv6 address
             packed = socket.inet_pton(socket.AF_INET6, address)
-            hexstring = ''.join(["%02x" % ord(x) for x in packed])
+            if PYVERSION == 2:
+                hexstring = ''.join(["%02x" % ord(x) for x in packed])
+            else:
+                hexstring = ''.join(["%02x" % x for x in packed])
             ptrowner = "%s%s" % \
                        ('.'.join([x for x in hexstring[::-1]]), v6_suffix)
         else:
