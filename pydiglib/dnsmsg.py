@@ -452,7 +452,7 @@ def decode_nsec3_rdata(pkt, offset, rdlen):
     offset += 1
     # hashed next owner name, base32 encoded with extended hex alphabet
     hashed_next_owner = base64.b32encode(pkt[offset:offset+hashlen])
-    hashed_next_owner = hashed_next_owner.translate(b32_to_ext_hex)
+    hashed_next_owner = hashed_next_owner.translate(b32_to_ext_hex).decode()
     offset += hashlen
     type_bitmap = pkt[offset:end_rdata]
     p = type_bitmap
