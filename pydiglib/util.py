@@ -196,11 +196,29 @@ def get_domainname(pkt, offset):
 
 
 def pdomainname(labels):
-    """given a sequence of domainname labels, return a printable string"""
-    if len(labels) == 1:          # list with 1 empty label is the root
+    """given a sequence of domainname labels, return a quoted printable text
+    representation of the domain name"""
+
+    printables = b'0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-*+'
+    result_list = []
+
+    for label in labels:
+        result = ''
+        for c in label:
+            if isinstance(c, int):
+                c_int, c_chr = c, chr(c)
+            else:
+                c_int, c_chr = ord(c), c.decode()
+            if c in printables:
+                result += c_chr
+            else:
+                result += ("\\%03d" % c_int)
+        result_list.append(result)
+
+    if result_list == ['']:
         return "."
     else:
-        return ".".join([x.decode() for x in labels])
+        return ".".join(result_list)
 
 
 def uid2ownername(uid, qtype):
