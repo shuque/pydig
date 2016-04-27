@@ -86,7 +86,10 @@ def main(args):
         if not response.tc:
             print(";; UDP response from %s, %d bytes, in %.3f sec" %
                   (responder_addr, size_response, (t2-t1)))
-            if server_addr != "0.0.0.0" and responder_addr[0] != server_addr:
+            is_ipv4_multicast = 224 <= int(server_addr.split('.')[0]) <= 239
+            if server_addr != "0.0.0.0" and \
+               responder_addr[0] != server_addr and
+               not is_ipv4_multicast:
                 print("WARNING: Response from unexpected address %s" %
                       responder_addr[0])
 

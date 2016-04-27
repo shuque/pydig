@@ -142,6 +142,8 @@ def send_request_udp(pkt, host, port, family, itimeout, retries):
     s = socket.socket(family, socket.SOCK_DGRAM)
     if options["srcip"]:
         s.bind((options["srcip"], 0))
+        s.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, \
+            socket.inet_aton(options["srcip"]))
     timeout = itimeout
     while (retries > 0):
         s.settimeout(timeout)
