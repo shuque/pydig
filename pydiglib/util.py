@@ -87,6 +87,15 @@ def ip2ptr(address):
     return ptrowner
 
 
+def is_multicast(address):
+    """Is given address (in text form) an IP multicast address?"""
+    if address.find('.') != -1:
+        return 224 <= int(address.split('.')[0]) <= 239
+    elif address.find(':') != -1:
+        field1 = address.split(':')[0]
+        return (len(field1) == 4) and (field1.lower()[:2] == 'ff')
+
+
 def get_socketparams(server, port, af, type):
     """Only the first set of parameters is used. Passing af=AF_UNSPEC prefers
     IPv6 if possible."""
