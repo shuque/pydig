@@ -19,6 +19,7 @@ options = dict(
     cd=0, 
     rd=1, 
     use_edns0=False, 
+    bufsize=EDNS0_UDPSIZE, 
     dnssec_ok=0,
     hexrdata=False, 
     do_zonewalk=False, 
@@ -112,6 +113,10 @@ def parse_args(arglist):
 
         elif arg == "+edns0":
             options["use_edns0"] = True
+
+        elif arg.startswith("+bufsize="):
+            options["use_edns0"] = True
+            options["bufsize"] = int(arg[9:])
 
         elif arg == "+dnssec":
             options["use_edns0"] = True

@@ -111,7 +111,7 @@ def mk_request(query, sent_id, options):
 
     if options["use_edns0"]:
         arcount = struct.pack('!H', 1)
-        additional = mk_optrr(0, EDNS0_UDPSIZE, 
+        additional = mk_optrr(0, options["bufsize"], 
                               dnssec_ok=options["dnssec_ok"],
                               nsid=options["nsid"],
                               cookie=options["cookie"],
