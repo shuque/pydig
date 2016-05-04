@@ -39,6 +39,7 @@ Options:
         +edns0                    use EDNS0 with 4096 octet UDP payload
         +dnssec                   request DNSSEC RRs in response
         +hex                      print hexdump of rdata field
+        +nsid                     send NSID (Name Server ID) option
         +cookie[=xxx]             send EDNS cookie option
         +subnet=addr              send EDNS client subnet option
         +chainquery[=name]        send EDNS chain query option

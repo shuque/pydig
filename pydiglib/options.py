@@ -22,6 +22,7 @@ options = dict(
     dnssec_ok=0,
     hexrdata=False, 
     do_zonewalk=False, 
+    nsid=False,
     cookie=False,
     subnet=False,
     chainquery=False,
@@ -121,6 +122,10 @@ def parse_args(arglist):
 
         elif arg == "+walk":
             options["do_zonewalk"] = True
+
+        elif arg == "+nsid":
+            options["use_edns0"] = True
+            options["nsid"] = True
 
         elif arg == "+cookie":
             options["use_edns0"] = True

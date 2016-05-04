@@ -16,6 +16,13 @@ def mk_id():
         return random.randint(1,65535)
 
 
+def mk_option_nsid():
+    """Construct EDNS NSID option"""
+    optcode = struct.pack('!H', 3)
+    optlen = struct.pack('!H', 0)
+    return optcode + optlen
+
+
 def mk_option_client_subnet(subnet):
     """construct EDNS client subnet option"""
     prefix_addr, prefix_len = subnet.split("/")
@@ -64,7 +71,7 @@ def mk_option_chainquery(chainquery):
 
 
 def mk_optrr(edns_version, udp_payload, dnssec_ok=False, 
-             cookie=False, subnet=False, chainquery=False):
+             nsid=False, cookie=False, subnet=False, chainquery=False):
     """Create EDNS0 OPT RR; see RFC 2671"""
     rdata     = b""
     rrname    = b'\x00'                                   # empty domain
@@ -73,6 +80,8 @@ def mk_optrr(edns_version, udp_payload, dnssec_ok=False,
     if dnssec_ok: z = 0x8000
     else:         z = 0x0
     ttl   = struct.pack('!BBH', 0, edns_version, z)      # extended rcode
+    if nsid:
+        rdata += mk_option_nsid()
     if cookie:
         rdata += mk_option_cookie(cookie)
     if subnet:
@@ -104,6 +113,7 @@ def mk_request(query, sent_id, options):
         arcount = struct.pack('!H', 1)
         additional = mk_optrr(0, EDNS0_UDPSIZE, 
                               dnssec_ok=options["dnssec_ok"],
+                              nsid=options["nsid"],
                               cookie=options["cookie"],
                               subnet=options["subnet"],
                               chainquery=options["chainquery"]);
