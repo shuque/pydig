@@ -14,6 +14,7 @@ options = dict(
     port=DEFAULT_PORT, 
     srcip=None, 
     use_tcp=False,
+    ignore=False,
     aa=0, 
     ad=0,
     cd=0, 
@@ -95,6 +96,9 @@ def parse_args(arglist):
 
         elif arg == "+tcp":
             options["use_tcp"] = True
+
+        elif arg == "+ignore":
+            options["ignore"] = True
 
         elif arg.startswith("+tls"):
             set_tls_options(arg)

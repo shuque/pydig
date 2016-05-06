@@ -94,16 +94,20 @@ def main(args):
     if options["use_tcp"] or (response and response.tc) \
        or (options["tls"] and options["tls_fallback"] and not response):
         if (response and response.tc):
-            print(";; UDP Response was truncated. Retrying using TCP ...")
+            if options["ignore"]:
+                print(";; UDP Response was truncated.")
+            else:
+                print(";; UDP Response was truncated. Retrying using TCP ...")
         if (options["tls"] and options["tls_fallback"] and not response):
             print(";; TLS fallback to TCP ...")
-        t1 = time.time()
-        responsepkt = send_request_tcp2(requestpkt, server_addr, port, family)
-        t2 = time.time()
-        size_response = len(responsepkt)
-        print(";; TCP response from %s, %d bytes, in %.3f sec" %
-              ( (server_addr, port), size_response, (t2-t1)))
-        response = DNSresponse(family, query, requestpkt, responsepkt, txid)
+        if not options["ignore"]:
+            t1 = time.time()
+            responsepkt = send_request_tcp2(requestpkt, server_addr, port, family)
+            t2 = time.time()
+            size_response = len(responsepkt)
+            print(";; TCP response from %s, %d bytes, in %.3f sec" %
+                  ( (server_addr, port), size_response, (t2-t1)))
+            response = DNSresponse(family, query, requestpkt, responsepkt, txid)
 
     response.print_preamble(options)
     response.decode_sections()

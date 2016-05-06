@@ -32,6 +32,7 @@ Options:
         -pNN                      use port NN (default is port 53)
         -bIP                      use IP as source IP address
         +tcp                      send query via TCP
+        +ignore                   ignore truncation (don't retry with TCP)
         +aaonly                   set authoritative answer bit
         +adflag                   set authenticated data bit
         +cdflag                   set checking disabled bit
