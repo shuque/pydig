@@ -9,7 +9,7 @@ def print_answer_rr(server_addr, port, family, qname, qtype, options):
     txid = mk_id()
     tc = 0
     qtype_val = qt.get_val(qtype)
-    options["use_edns0"] = True
+    options["use_edns"] = True
     options["dnssec_ok"] = False
     query = DNSquery(qname, qtype_val, 1)
     requestpkt = mk_request(query, txid, options)
@@ -49,7 +49,7 @@ def zonewalk(server_addr, port, family, qname, options):
     print(";;\n;; Performing walk of zone containing %s\n;;" % qname)
     start_qname = qname
     nsec_count = 0
-    options["use_edns0"] = True
+    options["use_edns"] = True
     options["dnssec_ok"] = False
     while True:
         txid = mk_id()

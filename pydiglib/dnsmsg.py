@@ -173,7 +173,7 @@ class DNSresponse:
                     if (is_axfr and (secname != "ANSWER")):
                         continue
                     elif rrtype == 41:
-                        print_optrr(rrclass, ttl, rdata)
+                        print_optrr(self.rcode, rrclass, ttl, rdata)
                     else:
                         self.print_rr(rrname, ttl, rrtype, rrclass, rdata)
 
@@ -181,10 +181,11 @@ class DNSresponse:
         return "<DNSresponse>"
 
 
-def print_optrr(rrclass, ttl, rdata):
+def print_optrr(rcode, rrclass, ttl, rdata):
     """decode and print EDNS0 OPT pseudo RR; see RFC 2671"""
     packed_ttl = struct.pack('!I', ttl)
-    ercode, version, z = struct.unpack('!BBH', packed_ttl)
+    ercode_hi, version, z = struct.unpack('!BBH', packed_ttl)
+    ercode = (ercode_hi << 4) | rcode
     flags = []
     if z & 0x8000: flags.append("do")                  # DNSSEC OK bit
     print(";; OPT: edns_version=%d, udp_payload=%d, flags=%s, ercode=%d(%s)" %

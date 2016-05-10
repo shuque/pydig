@@ -19,7 +19,8 @@ options = dict(
     ad=0,
     cd=0, 
     rd=1, 
-    use_edns0=False, 
+    use_edns=False,
+    edns_version=0,
     bufsize=EDNS0_UDPSIZE, 
     dnssec_ok=0,
     hexrdata=False, 
@@ -115,15 +116,19 @@ def parse_args(arglist):
         elif arg == "+norecurse":
             options["rd"] = 0
 
-        elif arg == "+edns0":
-            options["use_edns0"] = True
+        elif arg == "+edns":
+            options["use_edns"] = True
+
+        elif arg.startswith("+edns="):
+            options["use_edns"] = True
+            options["edns_version"] = int(arg[6:])
 
         elif arg.startswith("+bufsize="):
-            options["use_edns0"] = True
+            options["use_edns"] = True
             options["bufsize"] = int(arg[9:])
 
         elif arg == "+dnssec":
-            options["use_edns0"] = True
+            options["use_edns"] = True
             options["dnssec_ok"] = 1; 
 
         elif arg == "+hex":
@@ -133,27 +138,27 @@ def parse_args(arglist):
             options["do_zonewalk"] = True
 
         elif arg == "+nsid":
-            options["use_edns0"] = True
+            options["use_edns"] = True
             options["nsid"] = True
 
         elif arg == "+cookie":
-            options["use_edns0"] = True
+            options["use_edns"] = True
             options["cookie"] = True
 
         elif arg.startswith("+cookie="):
-            options["use_edns0"] = True
+            options["use_edns"] = True
             options["cookie"] = arg[8:]
             
         elif arg.startswith("+subnet="):
-            options["use_edns0"] = True
+            options["use_edns"] = True
             options["subnet"] = arg[8:]
             
         elif arg == "+chainquery":
-            options["use_edns0"] = True
+            options["use_edns"] = True
             options["chainquery"] = True
 
         elif arg.startswith("+chainquery="):
-            options["use_edns0"] = True
+            options["use_edns"] = True
             options["chainquery"] = arg[12:]
 
         elif arg == "+0x20":

@@ -24,8 +24,8 @@ pydig \- a DNS query tool written in Python
 +aaonly                   set authoritative answer bit
 +cdflag                   set checking disabled bit
 +norecurse                set rd bit to 0 (recursion not desired)
-+edns0                    use EDNS0 (default UDP payload 4096)
-+bufsize=NN               use EDNS0 with specified UDP payload size
++edns[=N]                 use EDNS with specified version (default 0)
++bufsize=NN               use EDNS with specified UDP payload size
 +dnssec                   request DNSSEC RRs in response
 +nsid                     send NSID (Name Server ID) option
 +cookie[=xxx]             send EDNS cookie option

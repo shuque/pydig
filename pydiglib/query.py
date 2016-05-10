@@ -109,9 +109,10 @@ def mk_request(query, sent_id, options):
     ancount = struct.pack('!H', 0)              # 0 answer
     nscount = struct.pack('!H', 0)              # 0 authority
 
-    if options["use_edns0"]:
+    if options["use_edns"]:
         arcount = struct.pack('!H', 1)
-        additional = mk_optrr(0, options["bufsize"], 
+        additional = mk_optrr(options["edns_version"],
+                              options["bufsize"],
                               dnssec_ok=options["dnssec_ok"],
                               nsid=options["nsid"],
                               cookie=options["cookie"],

@@ -37,8 +37,8 @@ Options:
         +adflag                   set authenticated data bit
         +cdflag                   set checking disabled bit
         +norecurse                set rd bit to 0 (recursion not desired)
-        +edns0                    use EDNS0 (default UDP payload 4096)
-        +bufsize=NN               use EDNS0 with specified UDP payload size
+        +edns[=N]                 use EDNS with specified version (default 0)
+        +bufsize=NN               use EDNS with specified UDP payload size
         +dnssec                   request DNSSEC RRs in response
         +hex                      print hexdump of rdata field
         +nsid                     send NSID (Name Server ID) option
