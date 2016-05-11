@@ -77,14 +77,15 @@ def mk_option_chainquery(chainquery):
     return optcode + optlen + optdata
 
 
-def mk_optrr(edns_version, udp_payload, dnssec_ok=False, 
+def mk_optrr(edns_version, udp_payload, flags=0, dnssec_ok=False,
              nsid=False, expire=False, cookie=False, subnet=False, chainquery=False):
     """Create EDNS0 OPT RR; see RFC 2671"""
     rdata     = b""
     rrname    = b'\x00'                                   # empty domain
     rrtype    = struct.pack('!H', qt.get_val("OPT"))     # OPT type code
     rrclass = struct.pack('!H', udp_payload)             # udp payload
-    if dnssec_ok: z = 0x8000
+    if flags != 0: z = flags
+    elif dnssec_ok: z = 0x8000
     else:         z = 0x0
     ttl   = struct.pack('!BBH', 0, edns_version, z)      # extended rcode
     if nsid:
@@ -122,6 +123,7 @@ def mk_request(query, sent_id, options):
         arcount = struct.pack('!H', 1)
         additional = mk_optrr(options["edns_version"],
                               options["bufsize"],
+                              flags=options["edns_flags"],
                               dnssec_ok=options["dnssec_ok"],
                               nsid=options["nsid"],
                               expire=options["expire"],

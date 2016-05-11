@@ -38,6 +38,7 @@ Options:
         +cdflag                   set checking disabled bit
         +norecurse                set rd bit to 0 (recursion not desired)
         +edns[=N]                 use EDNS with specified version (default 0)
+        +ednsflags=N              set EDNS flags field to N
         +bufsize=NN               use EDNS with specified UDP payload size
         +dnssec                   request DNSSEC RRs in response
         +hex                      print hexdump of rdata field

@@ -21,6 +21,7 @@ options = dict(
     rd=1, 
     use_edns=False,
     edns_version=0,
+    edns_flags=0,
     bufsize=EDNS0_UDPSIZE, 
     dnssec_ok=0,
     hexrdata=False, 
@@ -123,6 +124,10 @@ def parse_args(arglist):
         elif arg.startswith("+edns="):
             options["use_edns"] = True
             options["edns_version"] = int(arg[6:])
+
+        elif arg.startswith("+ednsflags="):
+            options["use_edns"] = True
+            options["edns_flags"] = int(arg[11:])
 
         elif arg.startswith("+bufsize="):
             options["use_edns"] = True
