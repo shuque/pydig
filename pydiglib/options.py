@@ -26,6 +26,7 @@ options = dict(
     hexrdata=False, 
     do_zonewalk=False, 
     nsid=False,
+    expire=False,
     cookie=False,
     subnet=False,
     chainquery=False,
@@ -140,6 +141,10 @@ def parse_args(arglist):
         elif arg == "+nsid":
             options["use_edns"] = True
             options["nsid"] = True
+
+        elif arg == "+expire":
+            options["use_edns"] = True
+            options["expire"] = True
 
         elif arg == "+cookie":
             options["use_edns"] = True

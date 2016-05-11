@@ -42,6 +42,7 @@ Options:
         +dnssec                   request DNSSEC RRs in response
         +hex                      print hexdump of rdata field
         +nsid                     send NSID (Name Server ID) option
+        +expire                   send an EDNS Expire option
         +cookie[=xxx]             send EDNS cookie option
         +subnet=addr              send EDNS client subnet option
         +chainquery[=name]        send EDNS chain query option

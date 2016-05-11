@@ -36,6 +36,7 @@ Options:
         +bufsize=NN               use EDNS with specified UDP payload size
         +dnssec                   request DNSSEC RRs in response
         +nsid                     send NSID (Name Server ID) option
+        +expire                   send an EDNS Expire option
         +cookie[=xxx]             send EDNS cookie option
         +subnet=addr              send EDNS client subnet option
 	+chainquery[=name]        send EDNS chain query	option
