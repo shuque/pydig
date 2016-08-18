@@ -195,7 +195,16 @@ def print_optrr(rcode, rrclass, ttl, rdata):
         ocode, olen = struct.unpack('!HH', blob[:4])
         odesc = edns_opt.get(ocode, "Unknown")
         print(";; OPT code=%d (%s), length=%d" % (ocode, odesc, olen))
-        print(";; DATA: %s" % hexdump(blob[4:4+olen]))
+        data = hexdump(blob[4:4+olen])
+        if ocode == 3:
+            human_readable_data = ''
+            try:
+                human_readable_data = data.decode('hex')
+            except TypeError:
+                pass
+            if human_readable_data:
+                data = '%s (%s)' % (data, human_readable_data)
+        print(";; DATA: %s" % data)
         blob = blob[4+olen:]
 
 
