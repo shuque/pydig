@@ -195,16 +195,17 @@ def print_optrr(rcode, rrclass, ttl, rdata):
         ocode, olen = struct.unpack('!HH', blob[:4])
         odesc = edns_opt.get(ocode, "Unknown")
         print(";; OPT code=%d (%s), length=%d" % (ocode, odesc, olen))
-        data = hexdump(blob[4:4+olen])
-        if ocode == 3:
+        data_raw = blob[4:4+olen]
+        data_out = hexdump(data_raw)
+        if ocode == 3:                           # NSID
             human_readable_data = ''
             try:
-                human_readable_data = data.decode('hex')
-            except TypeError:
+                human_readable_data = data_raw.decode('ascii')
+            except (TypeError, UnicodeDecodeError):
                 pass
             if human_readable_data:
-                data = '%s (%s)' % (data, human_readable_data)
-        print(";; DATA: %s" % data)
+                data_out = '%s (%s)' % (data_out, human_readable_data)
+        print(";; DATA: %s" % data_out)
         blob = blob[4+olen:]
 
 
