@@ -211,7 +211,7 @@ def print_optrr(rcode, rrclass, ttl, rdata):
 
 def decode_question(pkt, offset):
     """decode question section of a DNS message"""
-    domainname, offset = get_domainname(pkt, offset)
+    domainname, offset = get_domainname(pkt, offset, [])
     rrtype, rrclass = struct.unpack("!HH", pkt[offset:offset+4])
     offset += 4
     return (domainname, rrtype, rrclass, offset)
@@ -238,9 +238,9 @@ def decode_txt_rdata(rdata, rdlen):
 
 def decode_soa_rdata(pkt, offset, rdlen):
     """decode SOA rdata: mname, rname, serial, refresh, retry, expire, min"""
-    d, offset = get_domainname(pkt, offset)
+    d, offset = get_domainname(pkt, offset, [])
     mname = pdomainname(d)
-    d, offset = get_domainname(pkt, offset)
+    d, offset = get_domainname(pkt, offset, [])
     rname = pdomainname(d)
     serial, refresh, retry, expire, min = \
             struct.unpack("!IiiiI", pkt[offset:offset+20])
@@ -251,7 +251,7 @@ def decode_soa_rdata(pkt, offset, rdlen):
 def decode_srv_rdata(pkt, offset):
     """decode SRV rdata: priority (2), weight (2), port, target; RFC 2782"""
     priority, weight, port = struct.unpack("!HHH", pkt[offset:offset+6])
-    d, offset = get_domainname(pkt, offset+6)
+    d, offset = get_domainname(pkt, offset+6, [])
     target = pdomainname(d)
     return "%d %d %d %s" % (priority, weight, port, target)
 
@@ -279,7 +279,7 @@ def decode_naptr_rdata(pkt, offset, rdlen):
         s = pkt[position+1:position+1+slen]
         param[name] = '"%s"' % s.replace('\\', '\\\\')
         position += (1+slen)
-    d, junk = get_domainname(pkt, position)
+    d, junk = get_domainname(pkt, position, [])
     replacement = pdomainname(d)
     return "%d %d %s %s %s %s" % (order, pref, param["flags"], param["svc"],
                                   param["regexp"], replacement)
@@ -298,7 +298,7 @@ def decode_ipseckey_rdata(pkt, offset, rdlen):
         gw = socket.inet_ntop(socket.AF_INET6, pkt[position:position+16])
         position += 16
     elif gwtype == 3:                          # domainname
-        d, position = get_domainname(pkt, position)
+        d, position = get_domainname(pkt, position, [])
         gw = pdomainname(d)
     if alg == 0:                               # no public key
         pubkey = ""
@@ -385,7 +385,7 @@ def decode_rrsig_rdata(pkt, offset, rdlen):
           struct.unpack('!HBBIIIH', pkt[offset:offset+18])
     sig_exp = time.strftime("%Y%m%d%H%M%S", time.gmtime(sig_exp))
     sig_inc = time.strftime("%Y%m%d%H%M%S", time.gmtime(sig_inc))
-    d, offset = get_domainname(pkt, offset+18)
+    d, offset = get_domainname(pkt, offset+18, [])
     signer_name = pdomainname(d)
     signature = pkt[offset:end_rdata]
     retval = "{} {} {} {} {} {} {} {} {}".format(
@@ -416,7 +416,7 @@ def decode_typebitmap(windownum, bitmap):
 def decode_nsec_rdata(pkt, offset, rdlen):
     """decode NSEC rdata: nextrr, type-bitmap; see RFC 4034"""
     end_rdata = offset + rdlen
-    d, offset = get_domainname(pkt, offset)
+    d, offset = get_domainname(pkt, offset, [])
     nextrr = pdomainname(d)
     type_bitmap = pkt[offset:end_rdata]
     p = type_bitmap
@@ -492,7 +492,7 @@ def decode_rr(pkt, offset, hexrdata):
     """ Decode a resource record, given DNS packet and offset"""
 
     orig_offset = offset
-    domainname, offset = get_domainname(pkt, offset)
+    domainname, offset = get_domainname(pkt, offset, [])
     rrtype, rrclass, ttl, rdlen = \
             struct.unpack("!HHIH", pkt[offset:offset+10])
     offset += 10
@@ -502,13 +502,13 @@ def decode_rr(pkt, offset, hexrdata):
     elif rrtype == 1:                                        # A
         rdata = socket.inet_ntop(socket.AF_INET, rdata)
     elif rrtype in [2, 5, 12, 39]:                           # NS, CNAME, PTR
-        rdata, junk = get_domainname(pkt, offset)            # DNAME
+        rdata, junk = get_domainname(pkt, offset, [])            # DNAME
         rdata = pdomainname(rdata)
     elif rrtype == 6:                                        # SOA
         rdata = decode_soa_rdata(pkt, offset, rdlen)
     elif rrtype == 15:                                       # MX
         mx_pref, = struct.unpack('!H', pkt[offset:offset+2])
-        rdata, junk = get_domainname(pkt, offset+2)
+        rdata, junk = get_domainname(pkt, offset+2, [])
         rdata = "%d %s" % (mx_pref, pdomainname(rdata))
     elif rrtype in [16, 99]:                                 # TXT, SPF
         rdata = decode_txt_rdata(rdata, rdlen)
@@ -554,7 +554,7 @@ def decode_rr(pkt, offset, hexrdata):
 def decode_nsec_rr(pkt, offset):
     """ Decode an NSEC resource record; used by zonewalk() routine"""
     
-    domainname, offset = get_domainname(pkt, offset)
+    domainname, offset = get_domainname(pkt, offset, [])
     rrtype, rrclass, ttl, rdlen = \
             struct.unpack("!HHIH", pkt[offset:offset+10])
     if rrtype != 47:
@@ -564,7 +564,7 @@ def decode_nsec_rr(pkt, offset):
     rdata = pkt[offset:offset+rdlen]
 
     end_rdata = offset + rdlen
-    d, offset = get_domainname(pkt, offset)
+    d, offset = get_domainname(pkt, offset, [])
     nextrr = pdomainname(d)
     type_bitmap = pkt[offset:end_rdata]
     p = type_bitmap

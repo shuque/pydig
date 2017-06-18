@@ -179,8 +179,11 @@ def txt2domainname(input, canonical_form=False):
     return d
 
 
-def get_domainname(pkt, offset):
-    """decode a domainname at the given packet offset; see RFC 1035"""
+def get_domainname(pkt, offset, c_offset_list):
+    """decode a domainname at the given packet offset; see RFC 1035
+    c_offset_list is a list of compression offsets seen so far
+    for the current domain name."""
+
     global count_compression
     labellist = []               # a domainname is a sequence of labels
     Done = False
@@ -188,10 +191,15 @@ def get_domainname(pkt, offset):
         llen, = struct.unpack('B', pkt[offset:offset+1])
         if (llen >> 6) == 0x3:                 # compression pointer, sec 4.1.4
             count_compression += 1
+            if count_compression > 500:
+                raise ErrorMessage("Too many compression pointers followed.")
             c_offset, = struct.unpack('!H', pkt[offset:offset+2])
             c_offset = c_offset & 0x3fff       # last 14 bits
+            if c_offset in c_offset_list:
+                raise ErrorMessage("Found compression pointer loop.")
+            c_offset_list.append(c_offset)
             offset +=2
-            rightmostlabels, junk = get_domainname(pkt, c_offset)
+            rightmostlabels, junk = get_domainname(pkt, c_offset, c_offset_list)
             labellist += rightmostlabels
             Done = True
         else:

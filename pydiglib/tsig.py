@@ -99,7 +99,7 @@ class Tsig:
         self.response.msg = pkt
         self.response.tsig_offset = tsig_offset
         self.response.tsig_name = tsig_name
-        d, offset = get_domainname(pkt, offset)
+        d, offset = get_domainname(pkt, offset, [])
         self.response.alg = pdomainname(d)
         if self.response.alg.lower() != self.algorithm:
             raise ErrorMessage("%s -- unexpected TSIG algorithm" %
