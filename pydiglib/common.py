@@ -1,5 +1,5 @@
 
-import os, sys
+import os, sys, socket
 
 PROGNAME       = os.path.basename(sys.argv[0])
 PROGDESC       = "a DNS query tool written in Python"
@@ -14,7 +14,6 @@ RETRIES        = 3                     # how many times to try
 TIMEOUT_MAX    = 10
 BUFSIZE        = 65535                 # socket read/write buffer size
 EDNS0_UDPSIZE  = 4096
-DEBUG          = False                 # for more debugging output (-d)
 
 count_compression = 0                  # count of compression pointers derefs
 size_query = 0
@@ -65,8 +64,8 @@ Options:
 
 
 def dprint(input):
-    if DEBUG:
-        print("DEBUG:", input)
+    if options["DEBUG"]:
+        print(";; DEBUG: %s" % input)
     return
 
 
@@ -117,3 +116,44 @@ class Counter:
         self.total += val
     def average(self):
         return (1.0 * self.total)/self.count
+
+
+# Global dictionary of options: many options may be overridden or set in
+# options.py: parse_args() by command line arguments.
+options = dict(
+    DEBUG=False,
+    server=None,
+    port=DEFAULT_PORT,
+    srcip=None,
+    use_tcp=False,
+    ignore=False,
+    aa=0,
+    ad=0,
+    cd=0,
+    rd=1,
+    use_edns=False,
+    edns_version=0,
+    edns_flags=0,
+    ednsopt=[],
+    bufsize=EDNS0_UDPSIZE,
+    dnssec_ok=0,
+    hexrdata=False,
+    do_zonewalk=False,
+    nsid=False,
+    expire=False,
+    cookie=False,
+    subnet=False,
+    chainquery=False,
+    do_0x20=False,
+    ptr=False,
+    af=socket.AF_UNSPEC,
+    do_tsig=False,
+    tsig_sigtime=None,
+    unsigned_messages="",
+    msgid=None,
+    tls=False,
+    tls_auth=False,
+    tls_port=DEFAULT_PORT_TLS,
+    tls_fallback=False,
+    tls_hostname=None,
+)

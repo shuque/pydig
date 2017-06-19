@@ -6,47 +6,6 @@ from .tsig import Tsig, read_tsig_params
 from .windows import get_windows_default_dns
 
 
-# Global dictionary of options: many options may be overridden or set in
-# parse_args() by command line arguments.
-options = dict(
-    DEBUG=False,
-    server=None, 
-    port=DEFAULT_PORT, 
-    srcip=None, 
-    use_tcp=False,
-    ignore=False,
-    aa=0, 
-    ad=0,
-    cd=0, 
-    rd=1, 
-    use_edns=False,
-    edns_version=0,
-    edns_flags=0,
-    ednsopt=[],
-    bufsize=EDNS0_UDPSIZE, 
-    dnssec_ok=0,
-    hexrdata=False, 
-    do_zonewalk=False, 
-    nsid=False,
-    expire=False,
-    cookie=False,
-    subnet=False,
-    chainquery=False,
-    do_0x20=False,
-    ptr=False, 
-    af=socket.AF_UNSPEC, 
-    do_tsig=False,
-    tsig_sigtime=None, 
-    unsigned_messages="", 
-    msgid=None,
-    tls=False,
-    tls_auth=False,
-    tls_port=DEFAULT_PORT_TLS,
-    tls_fallback=False,
-    tls_hostname=None,
-)
-
-
 def set_tls_options(arg):
     """Set TLS options: authentication, fallback, hostname ..
        +tls={auth|noauth}

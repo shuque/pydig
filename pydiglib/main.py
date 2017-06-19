@@ -14,6 +14,7 @@ from .walk import zonewalk
 def main(args):
     """ main function"""
     sys.excepthook = excepthook
+    global count_compression
     tsig = Tsig()                          # instantiate Tsig object
 
     if len(args) == 1:
@@ -111,6 +112,6 @@ def main(args):
 
     response.print_preamble(options)
     response.decode_sections()
-    dprint(";; Compression pointer dereferences=%d" % count_compression)
+    dprint("Compression pointer dereferences=%d" % count_compression)
 
     return response.rcode

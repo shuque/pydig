@@ -191,8 +191,6 @@ def get_domainname(pkt, offset, c_offset_list):
         llen, = struct.unpack('B', pkt[offset:offset+1])
         if (llen >> 6) == 0x3:                 # compression pointer, sec 4.1.4
             count_compression += 1
-            if count_compression > 500:
-                raise ErrorMessage("Too many compression pointers followed.")
             c_offset, = struct.unpack('!H', pkt[offset:offset+2])
             c_offset = c_offset & 0x3fff       # last 14 bits
             if c_offset in c_offset_list:
