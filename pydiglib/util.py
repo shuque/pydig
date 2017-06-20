@@ -184,13 +184,12 @@ def get_domainname(pkt, offset, c_offset_list):
     c_offset_list is a list of compression offsets seen so far
     for the current domain name."""
 
-    global count_compression
     labellist = []               # a domainname is a sequence of labels
     Done = False
     while not Done:
         llen, = struct.unpack('B', pkt[offset:offset+1])
         if (llen >> 6) == 0x3:                 # compression pointer, sec 4.1.4
-            count_compression += 1
+            Stats.compression_cnt += 1
             c_offset, = struct.unpack('!H', pkt[offset:offset+2])
             c_offset = c_offset & 0x3fff       # last 14 bits
             if c_offset in c_offset_list:

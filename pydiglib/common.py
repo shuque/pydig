@@ -15,9 +15,12 @@ TIMEOUT_MAX    = 10
 BUFSIZE        = 65535                 # socket read/write buffer size
 EDNS0_UDPSIZE  = 4096
 
-count_compression = 0                  # count of compression pointers derefs
 size_query = 0
 size_response = 0
+
+class Stats:
+    """Statistics counters"""
+    compression_cnt = 0
 
 
 USAGE_STRING = """\

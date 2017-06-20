@@ -112,6 +112,6 @@ def main(args):
 
     response.print_preamble(options)
     response.decode_sections()
-    dprint("Compression pointer dereferences=%d" % count_compression)
+    dprint("Compression pointer dereferences=%d" % Stats.compression_cnt)
 
     return response.rcode
