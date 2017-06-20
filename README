@@ -1,5 +1,5 @@
 Program:	pydig (a DNS query tool written in Python)
-Version:	1.3.0
+Version:	1.3.1
 Written by:	Shumon Huque <shuque@gmail.com>
 
 Description:
@@ -113,6 +113,6 @@ Shumon Huque
 E-mail: shuque -at- gmail.com
 Web: https://www.huque.com/
 
-Copyright (c) 2006 - 2016, Shumon Huque. 
+Copyright (c) 2006 - 2017, Shumon Huque. 
 All rights reserved. This program is free software; you can redistribute 
 it and/or modify it under the same terms of the GNU General Public License.
