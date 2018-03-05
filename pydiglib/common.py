@@ -47,6 +47,7 @@ Options:
         +hex                      print hexdump of rdata field
         +nsid                     send NSID (Name Server ID) option
         +expire                   send an EDNS Expire option
+        +padding                  send an EDNS Padding option
         +cookie[=xxx]             send EDNS cookie option
         +subnet=addr              send EDNS client subnet option
         +chainquery[=name]        send EDNS chain query option
@@ -144,6 +145,7 @@ options = dict(
     do_zonewalk=False,
     nsid=False,
     expire=False,
+    padding=False,
     cookie=False,
     subnet=False,
     chainquery=False,
