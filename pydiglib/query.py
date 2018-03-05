@@ -29,6 +29,21 @@ def mk_option_expire():
     optlen = struct.pack('!H', 0)
     return optcode + optlen
 
+def mk_option_padding(headerlen):
+    """" Construct EDNS Padding option"""
+    optcode = struct.pack('!H', 12)
+    optdata=""
+    alldata=""
+    padlen = 0
+    if (headerlen % 64) >= 1:
+       padlen = (64 - headerlen) % 64
+    else:
+       padlen = 0
+    for i in range (0,padlen):
+       optdata+=struct.pack('!H', 0)
+    optlen = struct.pack('!H', len(optdata))
+    alldata += optcode + optlen + optdata
+    return alldata
 
 def mk_option_client_subnet():
     """construct EDNS client subnet option"""
@@ -90,26 +105,37 @@ def mk_option_generic():
 
 def mk_optrr(edns_version, udp_payload, flags=0, dnssec_ok=False):
     """Create EDNS0 OPT RR; see RFC 2671"""
+    headerlen = 0
     rdata     = b""
     rrname    = b'\x00'                                   # empty domain
     rrtype    = struct.pack('!H', qt.get_val("OPT"))     # OPT type code
     rrclass = struct.pack('!H', udp_payload)             # udp payload
+    headerlen += len(rdata+rrname+rrtype+rrclass)
     if flags != 0: z = flags
     elif dnssec_ok: z = 0x8000
     else:         z = 0x0
     ttl   = struct.pack('!BBH', 0, edns_version, z)      # ercode, ver, flags
+    headerlen += len(ttl)
     if options['nsid']:
         rdata += mk_option_nsid()
+	headerlen += len(rdata)
     if options['expire']:
         rdata += mk_option_expire()
+        headerlen += len(rdata)
     if options["cookie"]:
         rdata += mk_option_cookie()
+        headerlen += len(rdata)
     if options["subnet"]:
         rdata += mk_option_client_subnet()
+        headerlen += len(rdata)
     if options["chainquery"]:
         rdata += mk_option_chainquery()
+        headerlen += len(rdata)
+    if options["padding"]:
+        rdata += mk_option_padding(headerlen)
     if options["ednsopt"]:
         rdata += mk_option_generic()
+        headerlen += len(rdata)
     rdlen = struct.pack('!H', len(rdata))
     return (rrname + rrtype + rrclass + ttl + rdlen + rdata)
 

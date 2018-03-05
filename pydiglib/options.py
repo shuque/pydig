@@ -121,6 +121,10 @@ def parse_args(arglist):
             options["use_edns"] = True
             options["expire"] = True
 
+        elif arg == "+padding":
+            options["use_edns"] = True
+            options["padding"] = True
+
         elif arg == "+cookie":
             options["use_edns"] = True
             options["cookie"] = True
