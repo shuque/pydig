@@ -141,6 +141,15 @@ def parse_args(arglist):
             options["use_edns"] = True
             options["chainquery"] = arg[12:]
 
+        elif arg == "+padding":
+            options["use_edns"] = True
+            options["padding"] = True
+
+        elif arg.startswith("+padding="):
+            options["use_edns"] = True
+            options["padding"] = True
+            options["padding_blocksize"] = int(arg[9:])
+
         elif arg == "+0x20":
             options["do_0x20"] = True
 

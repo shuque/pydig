@@ -14,6 +14,7 @@ RETRIES        = 3                     # how many times to try
 TIMEOUT_MAX    = 10
 BUFSIZE        = 65535                 # socket read/write buffer size
 EDNS0_UDPSIZE  = 4096
+PAD_BLOCK_SIZE = 128
 
 size_query = 0
 size_response = 0
@@ -50,6 +51,7 @@ Options:
         +cookie[=xxx]             send EDNS cookie option
         +subnet=addr              send EDNS client subnet option
         +chainquery[=name]        send EDNS chain query option
+        +padding[=N]              send EDNS padding option (defblocksize 128)
         +walk                     walk (enumerate) a DNSSEC secured zone
         +0x20                     randomize case of query name (bit 0x20 hack)
         -4                        perform queries using IPv4
@@ -147,6 +149,8 @@ options = dict(
     cookie=False,
     subnet=False,
     chainquery=False,
+    padding=False,
+    padding_blocksize=None,
     do_0x20=False,
     ptr=False,
     af=socket.AF_UNSPEC,

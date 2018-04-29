@@ -30,6 +30,7 @@ class OptRR:
     rdlen = 0
     rdlen_packed = None
     rdata = b""
+    pad_blocksize = PAD_BLOCK_SIZE
 
     def __init__(self, version, udpbufsize, flags, dnssec_ok):
         self.version = version
@@ -42,21 +43,23 @@ class OptRR:
             self.flags = 0x8000
         else:
             self.flags = 0x0
+        if options["padding_blocksize"]:
+            self.pad_blocksize = options["padding_blocksize"]
         return
 
-    def mk_option_nsid(self):
+    def mk_nsid(self):
         """Construct EDNS NSID option"""
         optcode = struct.pack('!H', 3)
         optlen = struct.pack('!H', 0)
         return optcode + optlen
 
-    def mk_option_expire(self):
+    def mk_expire(self):
         """Construct EDNS Expire option"""
         optcode = struct.pack('!H', 9)
         optlen = struct.pack('!H', 0)
         return optcode + optlen
 
-    def mk_option_client_subnet(self):
+    def mk_client_subnet(self):
         """construct EDNS client subnet option"""
         prefix_addr, prefix_len = options["subnet"].split("/")
         prefix_len = int(prefix_len)
@@ -78,7 +81,7 @@ class OptRR:
         optlen = struct.pack('!H', len(optdata))
         return optcode + optlen + optdata
 
-    def mk_option_cookie(self):
+    def mk_cookie(self):
         """Construct EDNS cookie option"""
         optcode = struct.pack('!H', 10)
         if options["cookie"] == True:
@@ -92,7 +95,7 @@ class OptRR:
             optlen = struct.pack('!H', len(optdata))
         return optcode + optlen + optdata
 
-    def mk_option_chainquery(self):
+    def mk_chainquery(self):
         """Construct EDNS chain query option"""
         optcode = struct.pack('!H', 13)
         if options["chainquery"] == True:
@@ -102,7 +105,7 @@ class OptRR:
         optlen = struct.pack('!H', len(optdata))
         return optcode + optlen + optdata
 
-    def mk_option_generic(self):
+    def mk_generic(self):
         """Construct generic EDNS options"""
         alldata = ""
         for (n, s) in options["ednsopt"]:
@@ -112,21 +115,47 @@ class OptRR:
             alldata += optcode + optlen + optdata
         return alldata
 
-    def mk_optrr(self):
+    def mk_padding(self, msgsize):
+        """"
+        Construct EDNS Padding option; see RFC 7830. Pads the DNS query
+        message to the closest multiple of pad_blocksize. It does not yet
+        take into account TSIG RR however, which could be present after
+        the OPT RR.
+        """
+        remainder = msgsize % self.pad_blocksize
+        if remainder == 0:
+            print(";; Query Padding size: 0")
+            return b''
+        else:
+            msgsize += 4     # account for 4 bytes of opt code + length
+            remainder = msgsize % self.pad_blocksize
+            optcode = struct.pack('!H', 12)
+            optdata=""
+            padlen = self.pad_blocksize - remainder
+            optdata = b'\x00' * padlen
+            optlen = struct.pack('!H', len(optdata))
+            print(";; Query Padding size: {}, Block size: {}".format(
+                padlen+4, self.pad_blocksize))
+            return optcode + optlen + optdata
+
+    def mk_optrr(self, msglen):
         """Create EDNS0 OPT RR; see RFC 2671"""
         ttl   = struct.pack('!BBH', self.ercode, self.version, self.flags)
         if options['nsid']:
-            self.rdata += self.mk_option_nsid()
+            self.rdata += self.mk_nsid()
         if options['expire']:
-            self.rdata += self.mk_option_expire()
+            self.rdata += self.mk_expire()
         if options["cookie"]:
-            self.rdata += self.mk_option_cookie()
+            self.rdata += self.mk_cookie()
         if options["subnet"]:
-            self.rdata += self.mk_option_client_subnet()
+            self.rdata += self.mk_client_subnet()
         if options["chainquery"]:
-            self.rdata += self.mk_option_chainquery()
+            self.rdata += self.mk_chainquery()
         if options["ednsopt"]:
-            self.rdata += self.mk_option_generic()
+            self.rdata += self.mk_generic()
+        if options["padding"]:
+            msglen_no_pad = msglen + len(self.rrname) + 10 + len(self.rdata)
+            self.rdata += self.mk_padding(msglen_no_pad)
         self.rdlen = len(self.rdata)
         self.rdlen_packed = struct.pack('!H', self.rdlen)
         return (self.rrname + self.rrtype + self.rrclass + ttl +
@@ -157,14 +186,15 @@ def mk_request(query, sent_id, options):
     wire_qname = txt2domainname(query.qname)          # wire format domainname
 
     question = wire_qname + struct.pack('!H', query.qtype) + struct.pack('!H', query.qclass)
-        
+
+    msglen_before_opt = 12 + len(question)
     if options["use_edns"]:
         Opt = OptRR(options["edns_version"],
                     options["bufsize"],
                     flags=options["edns_flags"],
                     dnssec_ok=options["dnssec_ok"])
         arcount = struct.pack('!H', 1)
-        additional = Opt.mk_optrr()
+        additional = Opt.mk_optrr(msglen=msglen_before_opt)
     else:
         arcount = struct.pack('!H', 0)
         additional = b""
