@@ -118,9 +118,7 @@ class OptRR:
     def mk_padding(self, msgsize):
         """"
         Construct EDNS Padding option; see RFC 7830. Pads the DNS query
-        message to the closest multiple of pad_blocksize. It does not yet
-        take into account TSIG RR however, which could be present after
-        the OPT RR.
+        message to the closest multiple of pad_blocksize.
         """
         remainder = msgsize % self.pad_blocksize
         if remainder == 0:
@@ -162,6 +160,17 @@ class OptRR:
                 self.rdlen_packed + self.rdata)
 
 
+def tsig_rr_length():
+    """Calculate TSIG RR's length - to help padding OPT calculation"""
+    tsig = options["tsig"]
+    sum = len(txt2domainname(tsig.keyname, canonical_form=True)) + \
+          10 + \
+          len(txt2domainname(tsig.algorithm, canonical_form=True)) + \
+          16 + \
+          tsig.algorithm_len
+    return sum
+
+
 def mk_request(query, sent_id, options):
     """Construct DNS query packet, given various parameters"""
     packed_id = struct.pack('!H', sent_id)
@@ -187,14 +196,16 @@ def mk_request(query, sent_id, options):
 
     question = wire_qname + struct.pack('!H', query.qtype) + struct.pack('!H', query.qclass)
 
-    msglen_before_opt = 12 + len(question)
+    msglen_before_padding = 12 + len(question)
+    if options["do_tsig"]:
+        msglen_before_padding += tsig_rr_length()
     if options["use_edns"]:
         Opt = OptRR(options["edns_version"],
                     options["bufsize"],
                     flags=options["edns_flags"],
                     dnssec_ok=options["dnssec_ok"])
         arcount = struct.pack('!H', 1)
-        additional = Opt.mk_optrr(msglen=msglen_before_opt)
+        additional = Opt.mk_optrr(msglen=msglen_before_padding)
     else:
         arcount = struct.pack('!H', 0)
         additional = b""
@@ -203,7 +214,7 @@ def mk_request(query, sent_id, options):
           question + additional
 
     if options["do_tsig"]:                      # sign message with TSIG
-        tsig = options["tsig"]
+        tsig = options["tsig"]                  # ref to TSIG class
         tsig_rr = tsig.mk_request_tsig(sent_id, msg)
         arcount, = struct.unpack('!H', arcount)
         arcount = struct.pack('!H', arcount+1)

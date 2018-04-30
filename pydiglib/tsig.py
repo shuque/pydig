@@ -14,6 +14,15 @@ dns_tsig_alg = {
     "hmac-sha384" : ("hmac-sha384.", hashlib.sha384),
     "hmac-sha512" : ("hmac-sha512.", hashlib.sha512),
     }
+dns_tsig_alg_len = {
+    "hmac-md5"    : 16,
+    "gss-tsig"    : None,
+    "hmac-sha1"   : 20,
+    "hmac-sha224" : 28,
+    "hmac-sha256" : 32,
+    "hmac-sha384" : 48,
+    "hmac-sha512" : 64,
+    }
 
 
 def read_tsig_params(filename):
@@ -39,6 +48,7 @@ class Tsig:
         self.keyname = None
         self.key = None
         self.algorithm = None
+        self.algorithm_len = None
         self.function = None
         self.prior_digest = None
         self.sigtime = None
@@ -62,6 +72,7 @@ class Tsig:
         if algorithm == None:
             raise ErrorMessage("unsupported TSIG algorithm %s" % algorithm)
         self.algorithm, self.function = dns_tsig_alg.get(algorithm)
+        self.algorithm_len = dns_tsig_alg_len.get(algorithm)
 
     def mk_request_tsig(self, msgid, msg):
         """Create TSIG (Transaction Signature) RR; see RFC 2845; currently"""
