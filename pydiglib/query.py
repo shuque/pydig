@@ -128,7 +128,6 @@ class OptRR:
             msgsize += 4     # account for 4 bytes of opt code + length
             remainder = msgsize % self.pad_blocksize
             optcode = struct.pack('!H', 12)
-            optdata=""
             padlen = self.pad_blocksize - remainder
             optdata = b'\x00' * padlen
             optlen = struct.pack('!H', len(optdata))
@@ -163,11 +162,8 @@ class OptRR:
 def tsig_rr_length():
     """Calculate TSIG RR's length - to help padding OPT calculation"""
     tsig = options["tsig"]
-    sum = len(txt2domainname(tsig.keyname, canonical_form=True)) + \
-          10 + \
-          len(txt2domainname(tsig.algorithm, canonical_form=True)) + \
-          16 + \
-          tsig.algorithm_len
+    sum = len(txt2domainname(tsig.keyname)) + 10 + \
+          len(txt2domainname(tsig.algorithm)) + 16 + tsig.algorithm_len
     return sum
 
 
