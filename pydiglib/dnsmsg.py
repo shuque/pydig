@@ -190,7 +190,7 @@ class DNSquery:
     authority = b''
     additional = b''
     message = b''
-    msglen_before_opt = 0
+    msglen_without_opt = 0
     msglen = 0
 
     def __init__(self, qname, qtype, qclass, minimize=False):
@@ -205,9 +205,9 @@ class DNSquery:
         self.ad = options["ad"]
         self.cd = options["cd"]
         self.mk_question()
-        self.msglen_before_opt = 12 + len(self.question)
+        self.msglen_without_opt = 12 + len(self.question)
         if options["do_tsig"]:
-            self.msglen_before_opt += tsig_rr_length()
+            self.msglen_without_opt += tsig_rr_length()
         dprint("Question length: {}".format(len(self.question)))
         if options["use_edns"]:
             self.mk_additional()
@@ -267,7 +267,7 @@ class DNSquery:
                     flags=options["edns_flags"],
                     dnssec_ok=options["dnssec_ok"])
         self.arcount += 1
-        self.additional = Opt.mk_optrr(msglen=self.msglen_before_opt)
+        self.additional = Opt.mk_optrr(msglen=self.msglen_without_opt)
 
     def assemble_message(self):
         self.message = self.header + \
