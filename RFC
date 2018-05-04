@@ -54,3 +54,7 @@ Some DNS related RFCs
 	   Dynamic Host Configuration Protocol (DHCP) Information (DHCID RR)
 4795	Link-local Multicast Name Resolution (LLMNR) (info.)
 5155	DNS Security (DNSSEC) Hashed Authenticated Denial of Existence
+6698	The DNS-Based Authentication of Named Entities
+7830	The EDNS(0) Padding Option - IETF Tools
+7858	Specification for DNS over Transport Layer Security (TLS)
+7901	CHAIN Query Requests in DNS

@@ -160,7 +160,11 @@ class OptRR:
 
 
 def tsig_rr_length():
-    """Calculate TSIG RR's length - to help padding OPT calculation"""
+    """
+    Pre-calculate TSIG RR's length even before the TSIG RR contents are
+    computed. This is needed to figure out the amount of EDNS padding,
+    since the padding option in the OPT RR precedes the TSIG RR.
+    """
     tsig = options["tsig"]
     sum = len(txt2domainname(tsig.keyname)) + 10 + \
           len(txt2domainname(tsig.algorithm)) + 16 + tsig.algorithm_len
