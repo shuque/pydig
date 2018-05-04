@@ -7,8 +7,191 @@ from .dnsparam import *
 from .util import *
 
 
+class OptRR:
+
+    """EDNS OPT Resource Record; see RFC 2671 and 6891"""
+    version = 0
+    udpbufsize = EDNS0_UDPSIZE
+    flags = 0
+    dnssec_ok = False
+    ercode = 0
+    rrname = b'\x00'                                     # empty domain
+    rrtype = struct.pack('!H', qt.get_val("OPT"))        # OPT type code
+    rrclass = None
+    rdlen = 0
+    rdlen_packed = None
+    rdata = b""
+    pad_blocksize = PAD_BLOCK_SIZE
+
+    def __init__(self, version, udpbufsize, flags, dnssec_ok):
+        self.version = version
+        self.udpbufsize = udpbufsize
+        self.rrclass = struct.pack('!H', udpbufsize)
+        self.dnssec_ok = dnssec_ok
+        if flags != 0:
+            self.flags = flags
+        elif dnssec_ok:
+            self.flags = 0x8000
+        else:
+            self.flags = 0x0
+        if options["padding_blocksize"]:
+            self.pad_blocksize = options["padding_blocksize"]
+        return
+
+    def mk_nsid(self):
+        """Construct EDNS NSID option"""
+        optcode = struct.pack('!H', 3)
+        optlen = struct.pack('!H', 0)
+        return optcode + optlen
+
+    def mk_expire(self):
+        """Construct EDNS Expire option"""
+        optcode = struct.pack('!H', 9)
+        optlen = struct.pack('!H', 0)
+        return optcode + optlen
+
+    def mk_client_subnet(self):
+        """construct EDNS client subnet option"""
+        prefix_addr, prefix_len = options["subnet"].split("/")
+        prefix_len = int(prefix_len)
+        addr_octets = int(math.ceil(prefix_len/8.0))
+        if prefix_addr.find('.') != -1:                    # IPv4
+            af = struct.pack('!H', 1)
+            address = socket.inet_pton(socket.AF_INET,
+                                       prefix_addr)[0:addr_octets]
+        elif prefix_addr.find(':') != -1:                  # IPv6
+            af = struct.pack('!H', 2)
+            address = socket.inet_pton(socket.AF_INET6,
+                                       prefix_addr)[0:addr_octets]
+        else:
+            raise ErrorMessage("Invalid client subnet: %s" % prefix_addr)
+        src_prefix_len = struct.pack('B', prefix_len)
+        scope_prefix_len = b'\x00'
+        optcode = struct.pack('!H', 8)
+        optdata = af + src_prefix_len + scope_prefix_len + address
+        optlen = struct.pack('!H', len(optdata))
+        return optcode + optlen + optdata
+
+    def mk_cookie(self):
+        """Construct EDNS cookie option"""
+        optcode = struct.pack('!H', 10)
+        if options["cookie"] == True:
+            optdata = os.urandom(8)
+            optlen = struct.pack('!H', 8)
+        else:
+            try:
+                optdata = h2bin(options["cookie"])
+            except:
+                raise ErrorMessage("Malformed cookie: %s" % options["cookie"])
+            optlen = struct.pack('!H', len(optdata))
+        return optcode + optlen + optdata
+
+    def mk_chainquery(self):
+        """Construct EDNS chain query option"""
+        optcode = struct.pack('!H', 13)
+        if options["chainquery"] == True:
+            optdata = b'\x00'
+        else:
+            optdata = txt2domainname(options["chainquery"])
+        optlen = struct.pack('!H', len(optdata))
+        return optcode + optlen + optdata
+
+    def mk_generic(self):
+        """Construct generic EDNS options"""
+        alldata = ""
+        for (n, s) in options["ednsopt"]:
+            optcode = struct.pack('!H', n)
+            optdata = h2bin(s)
+            optlen = struct.pack('!H', len(optdata))
+            alldata += optcode + optlen + optdata
+        return alldata
+
+    def mk_padding(self, msgsize):
+        """"
+        Construct EDNS Padding option; see RFC 7830. Pads the DNS query
+        message to the closest multiple of pad_blocksize.
+        """
+        remainder = msgsize % self.pad_blocksize
+        if remainder == 0:
+            print(";; Query Padding size: 0")
+            return b''
+        else:
+            msgsize += 4     # account for 4 bytes of opt code + length
+            remainder = msgsize % self.pad_blocksize
+            optcode = struct.pack('!H', 12)
+            padlen = self.pad_blocksize - remainder
+            optdata = b'\x00' * padlen
+            optlen = struct.pack('!H', len(optdata))
+            print(";; Query Padding size: {}, Block size: {}".format(
+                padlen+4, self.pad_blocksize))
+            return optcode + optlen + optdata
+
+    def mk_optrr(self, msglen):
+        """Create EDNS0 OPT RR; see RFC 2671"""
+        ttl   = struct.pack('!BBH', self.ercode, self.version, self.flags)
+        if options['nsid']:
+            self.rdata += self.mk_nsid()
+        if options['expire']:
+            self.rdata += self.mk_expire()
+        if options["cookie"]:
+            self.rdata += self.mk_cookie()
+        if options["subnet"]:
+            self.rdata += self.mk_client_subnet()
+        if options["chainquery"]:
+            self.rdata += self.mk_chainquery()
+        if options["ednsopt"]:
+            self.rdata += self.mk_generic()
+        if options["padding"]:
+            msglen_no_pad = msglen + len(self.rrname) + 10 + len(self.rdata)
+            self.rdata += self.mk_padding(msglen_no_pad)
+        self.rdlen = len(self.rdata)
+        self.rdlen_packed = struct.pack('!H', self.rdlen)
+        return (self.rrname + self.rrtype + self.rrclass + ttl +
+                self.rdlen_packed + self.rdata)
+
+
+def tsig_rr_length():
+    """
+    Pre-calculate TSIG RR's length even before the TSIG RR contents are
+    computed. This is needed to figure out the amount of EDNS padding,
+    since the padding option in the OPT RR precedes the TSIG RR.
+    """
+    tsig = options["tsig"]
+    sum = len(txt2domainname(tsig.keyname)) + 10 + \
+          len(txt2domainname(tsig.algorithm)) + 16 + tsig.algorithm_len
+    return sum
+
+
 class DNSquery:
     """DNS Query class"""
+
+    txid = None
+    packed_txid = b''
+    qr = 0
+    opcode = 0
+    aa = 0
+    tc = 0
+    rd = 1
+    ra = 0
+    z = 0
+    rcode = 0
+    flags = b''
+    qdcount = 1
+    ancount = 0
+    nscount = 0
+    arcount = 0
+    packed_qdcount = b''
+    packed_ancount = b''
+    packed_nscount = b''
+    packed_arcount = b''
+
+    header = b''
+    question = b''
+    authority = b''
+    additional = b''
+    message = b''
+    msglen_before_opt = 0
+    msglen = 0
 
     def __init__(self, qname, qtype, qclass, minimize=False):
         self.qname = qname
@@ -16,6 +199,87 @@ class DNSquery:
         self.qtype = qtype
         self.qclass = qclass
         self.minimize = minimize
+        self.set_txid()
+        self.aa = options["aa"]
+        self.rd = options["rd"]
+        self.ad = options["ad"]
+        self.cd = options["cd"]
+        self.mk_question()
+        self.msglen_before_opt = 12 + len(self.question)
+        if options["do_tsig"]:
+            self.msglen_before_opt += tsig_rr_length()
+        dprint("Question length: {}".format(len(self.question)))
+        if options["use_edns"]:
+            self.mk_additional()
+        self.mk_header_fields()
+        self.assemble_header()
+        dprint("Header length: {}".format(len(self.header)))
+        self.assemble_message()
+        if options["do_tsig"]:
+            self.add_tsig()
+            self.assemble_header()
+            self.assemble_message()
+        self.msglen = len(self.message)
+
+    def get_message(self):
+        return self.message
+
+    def set_txid(self):
+        if options["msgid"]:
+            self.txid = options["msgid"]
+        else:
+            self.txid = random.randint(1, 65535)
+
+    def mk_question(self):
+        wire_qname = txt2domainname(self.qname)
+        self.question = wire_qname + struct.pack('!H', self.qtype) + \
+                        struct.pack('!H', self.qclass)
+
+    def mk_header_fields(self):
+        self.packed_txid = struct.pack('!H', self.txid)
+        flags = (self.qr << 15) + \
+                (self.opcode << 11) + \
+                (self.aa << 10) + \
+                (self.tc << 9) + \
+                (self.rd << 8) + \
+                (self.ra << 7) + \
+                (self.z << 6) + \
+                (self.ad << 5) + \
+                (self.cd << 4) + \
+                self.rcode
+        self.flags = struct.pack('!H', flags)
+        self.packed_qdcount = struct.pack('!H', self.qdcount)
+        self.packed_ancount = struct.pack('!H', self.ancount)
+        self.packed_nscount = struct.pack('!H', self.nscount)
+        self.packed_arcount = struct.pack('!H', self.arcount)
+
+    def assemble_header(self):
+        self.header = self.packed_txid + \
+                      self.flags + \
+                      self.packed_qdcount + \
+                      self.packed_ancount + \
+                      self.packed_nscount + \
+                      self.packed_arcount
+
+    def mk_additional(self):
+        Opt = OptRR(options["edns_version"],
+                    options["bufsize"],
+                    flags=options["edns_flags"],
+                    dnssec_ok=options["dnssec_ok"])
+        self.arcount += 1
+        self.additional = Opt.mk_optrr(msglen=self.msglen_before_opt)
+
+    def assemble_message(self):
+        self.message = self.header + \
+                       self.question + \
+                       self.additional
+
+    def add_tsig(self):
+        tsig = options["tsig"]                   # pointer to TSIG object
+        self.tsig_rr = tsig.mk_request_tsig(self.txid, self.message)
+        self.arcount += 1
+        self.packed_arcount = struct.pack('!H', self.arcount)
+        self.additional += self.tsig_rr
 
     def __repr__(self):
         return "<DNSquery: %s,%s,%s>" % (self.qname, self.qtype, self.qclass)
@@ -24,7 +288,7 @@ class DNSquery:
 class DNSresponse:
     """DNS Response class"""
 
-    id = None
+    txid = None
     qr = None
     opcode = None
     aa = None
@@ -43,23 +307,22 @@ class DNSresponse:
     nscount = None
     arcount = None
 
-    def __init__(self, family, query, requestpkt, pkt, 
-                 sent_id, used_tcp=False,  checkid=True):
+    def __init__(self, family, query, pkt, used_tcp=False, checkid=True):
         self.family = family
         self.query = query
-        self.requestpkt = requestpkt
+        self.requestpkt = query.get_message()
         self.pkt = pkt
         self.used_tcp = used_tcp
-        self.decode_header(pkt, sent_id, checkid)
+        self.decode_header(pkt, checkid)
 
-    def decode_header(self, pkt, sent_id, checkid=True):
+    def decode_header(self, pkt, checkid=True):
         """Decode a DNS protocol header"""
-        self.id, answerflags, self.qdcount, self.ancount, \
+        self.txid, answerflags, self.qdcount, self.ancount, \
             self.nscount, self.arcount = struct.unpack('!HHHHHH', pkt[:12])
-        if checkid and (self.id != sent_id):
+        if checkid and (self.txid != self.query.txid):
             # Should continue listening for a valid response here (ideally)
             raise ErrorMessage("got response with id: %ld (expecting %ld)" % 
-                               (self.id, sent_id))
+                               (self.txid, self.query.txid))
         self.qr = answerflags >> 15
         self.opcode = (answerflags >> 11) & 0xf
         self.aa = (answerflags >> 10) & 0x1
@@ -98,7 +361,7 @@ class DNSresponse:
         if options["do_0x20"]:
             print(";; 0x20-hack qname: %s" % self.query.qname)
         print(";; rcode=%d(%s), id=%d" %
-              (self.rcode, rc.get_name(self.rcode), self.id))
+              (self.rcode, rc.get_name(self.rcode), self.txid))
         print(";; qr=%d opcode=%d aa=%d tc=%d rd=%d ra=%d z=%d ad=%d cd=%d" %
               (self.qr,
                self.opcode,

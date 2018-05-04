@@ -6,19 +6,17 @@ from .query import *
 
 def print_answer_rr(server_addr, port, family, qname, qtype, options):
     """Only print the answer RRs; used by zonewalk() routine"""
-    txid = mk_id()
-    tc = 0
     qtype_val = qt.get_val(qtype)
     options["use_edns"] = True
     options["dnssec_ok"] = False
     query = DNSquery(qname, qtype_val, 1)
-    requestpkt = mk_request(query, txid, options)
+    requestpkt = query.get_message()
     (responsepkt, responder_addr) = \
                 send_request_udp(requestpkt, server_addr, port, family,
                                  ITIMEOUT, RETRIES)
     if not responsepkt:
         raise ErrorMessage("No response from server")
-    response = DNSresponse(family, query, requestpkt, responsepkt, txid)
+    response = DNSresponse(family, query, responsepkt)
 
     if response.rcode != 0:
         raise ErrorMessage("got rcode=%d(%s)" %
@@ -52,16 +50,15 @@ def zonewalk(server_addr, port, family, qname, options):
     options["use_edns"] = True
     options["dnssec_ok"] = False
     while True:
-        txid = mk_id()
         query = DNSquery(qname, 47, 1)
-        requestpkt = mk_request(query, txid, options)
+        requestpkt = query.get_message()
         dprint("Querying NSEC for %s .." % query.qname)
         (responsepkt, responder_addr) = \
                       send_request_udp(requestpkt, server_addr, port, family,
                                        ITIMEOUT, RETRIES)
         if not responsepkt:
             raise ErrorMessage("No response from server")
-        response = DNSresponse(family, query, requestpkt, responsepkt, txid)
+        response = DNSresponse(family, query, responsepkt)
 
         if response.rcode != 0:
             raise ErrorMessage("got rcode=%d(%s), querying %s, NSEC" %

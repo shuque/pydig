@@ -20,6 +20,8 @@ def main(args):
     if len(args) == 1:
         raise UsageError('')
 
+    random_init()
+
     try:
         qname, qtype, qclass = parse_args(args[1:])
         qtype_val = qt.get_val(qtype)
@@ -38,15 +40,11 @@ def main(args):
     except socket.gaierror as e:
         raise ErrorMessage("bad server: %s (%s)" % (options["server"], e))
         
-    random_init()
-
     if options["do_zonewalk"]:
         zonewalk(server_addr, port, family, qname, options)
         sys.exit(0)
 
-    txid = mk_id()
-    tc = 0
-    requestpkt = mk_request(query, txid, options)
+    requestpkt = query.get_message()
     size_query = len(requestpkt)
 
     if qtype == "AXFR":
@@ -67,7 +65,7 @@ def main(args):
             size_response = len(responsepkt)
             print(";; TLS response from %s, %d bytes, in %.3f sec" %
                   ( (server_addr, options["tls_port"]), size_response, (t2-t1)))
-            response = DNSresponse(family, query, requestpkt, responsepkt, txid)
+            response = DNSresponse(family, query, responsepkt)
         else:
             print(";; TLS response failure from %s, %d" %
                   (server_addr, options["tls_port"]))
@@ -83,7 +81,7 @@ def main(args):
         size_response = len(responsepkt)
         if not responsepkt:
             raise ErrorMessage("No response from server")
-        response = DNSresponse(family, query, requestpkt, responsepkt, txid)
+        response = DNSresponse(family, query, responsepkt)
         if not response.tc:
             print(";; UDP response from %s, %d bytes, in %.3f sec" %
                   (responder_addr, size_response, (t2-t1)))
@@ -108,7 +106,7 @@ def main(args):
             size_response = len(responsepkt)
             print(";; TCP response from %s, %d bytes, in %.3f sec" %
                   ( (server_addr, port), size_response, (t2-t1)))
-            response = DNSresponse(family, query, requestpkt, responsepkt, txid)
+            response = DNSresponse(family, query, responsepkt)
 
     response.print_preamble(options)
     response.decode_sections()
