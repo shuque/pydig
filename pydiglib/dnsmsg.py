@@ -200,12 +200,10 @@ class DNSquery:
         if options["do_tsig"]:
             self.tsig = options["tsig"]
             self.msglen_without_opt += self.tsig.get_rr_length()
-        dprint("Question length: {}".format(len(self.question)))
         if options["use_edns"]:
             self.mk_additional()
         self.mk_header_fields()
         self.assemble_header()
-        dprint("Header length: {}".format(len(self.header)))
         self.assemble_message()
         if options["do_tsig"]:
             self.add_tsig()
