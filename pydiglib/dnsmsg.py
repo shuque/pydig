@@ -150,18 +150,6 @@ class OptRR:
                 self.rdlen_packed + self.rdata)
 
 
-def tsig_rr_length():
-    """
-    Pre-calculate TSIG RR's length even before the TSIG RR contents are
-    computed. This is needed to figure out the amount of EDNS padding,
-    since the padding option in the OPT RR precedes the TSIG RR.
-    """
-    tsig = options["tsig"]
-    sum = len(txt2domainname(tsig.keyname)) + 10 + \
-          len(txt2domainname(tsig.algorithm)) + 16 + tsig.algorithm_len
-    return sum
-
-
 class DNSquery:
     """DNS Query class"""
 
@@ -185,6 +173,9 @@ class DNSquery:
     packed_nscount = b''
     packed_arcount = b''
 
+    tsig = None
+    tsig_rr = b''
+
     header = b''
     question = b''
     authority = b''
@@ -207,7 +198,8 @@ class DNSquery:
         self.mk_question()
         self.msglen_without_opt = 12 + len(self.question)
         if options["do_tsig"]:
-            self.msglen_without_opt += tsig_rr_length()
+            self.tsig = options["tsig"]
+            self.msglen_without_opt += self.tsig.get_rr_length()
         dprint("Question length: {}".format(len(self.question)))
         if options["use_edns"]:
             self.mk_additional()
@@ -275,8 +267,7 @@ class DNSquery:
                        self.additional
 
     def add_tsig(self):
-        tsig = options["tsig"]                   # pointer to TSIG object
-        self.tsig_rr = tsig.mk_request_tsig(self.txid, self.message)
+        self.tsig_rr = self.tsig.mk_request_tsig(self.txid, self.message)
         self.arcount += 1
         self.packed_arcount = struct.pack('!H', self.arcount)
         self.additional += self.tsig_rr

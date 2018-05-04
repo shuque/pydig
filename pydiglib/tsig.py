@@ -74,6 +74,15 @@ class Tsig:
         self.algorithm, self.function = dns_tsig_alg.get(algorithm)
         self.algorithm_len = dns_tsig_alg_len.get(algorithm)
 
+    def get_rr_length(self):
+        """
+        Pre-calculate TSIG RR's length even before the TSIG RR contents are
+        computed. This is needed to figure out the amount of EDNS padding,
+        since the padding option in the OPT RR precedes the TSIG RR.
+        """
+        return len(txt2domainname(self.keyname)) + 10 + \
+            len(txt2domainname(self.algorithm)) + 16 + self.algorithm_len
+
     def mk_request_tsig(self, msgid, msg):
         """Create TSIG (Transaction Signature) RR; see RFC 2845; currently"""
 
