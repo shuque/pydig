@@ -98,7 +98,7 @@ class OptRR:
 
     def mk_generic(self):
         """Construct generic EDNS options"""
-        alldata = ""
+        alldata = b''
         for (n, s) in options["ednsopt"]:
             optcode = struct.pack('!H', n)
             optdata = h2bin(s)

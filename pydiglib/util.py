@@ -21,7 +21,7 @@ def hexdump(inputbytes):
 
 def h2bin(x):
     """turn hex dump string with optional whitespaces into binary string"""
-    return x.replace(' ', '').replace('\n', '').decode('hex')
+    return binascii.unhexlify(x.replace(' ', '').replace('\n', ''))
 
 
 def packed2int(input):
