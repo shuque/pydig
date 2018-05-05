@@ -1,5 +1,5 @@
 Program:	pydig (a DNS query tool written in Python)
-Version:	1.3.1
+Version:	1.4.0
 Written by:	Shumon Huque <shuque@gmail.com>
 
 Description:
@@ -10,8 +10,8 @@ Description:
 	it mostly for fun, and for helping me to learn more esoteric
 	features of the DNS. Occasionally I use this to quickly prototype
 	proposed enhancements to the DNS. Some of the more recent
-	such features include EDNS client subnet, chain query, 
-	cookies, DNS over TLS, and more.
+	such features include EDNS client subnet, chain query, cookies,
+	DNS over TLS, EDNS padding, DNS over HTTPS, and more.
 
 	RR type and class codes (qtype and qclass) unknown to this 
 	program can be specified with the TYPE123 and CLASS123 syntax.

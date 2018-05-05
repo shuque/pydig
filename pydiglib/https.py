@@ -25,7 +25,8 @@ else:
         if status_code != 200:
             print("ERROR: HTTP Response Code: {}".format(status_code))
             print(resp.headers)
+            if resp.text:
+                print(resp.text)
             return None
         else:
             return resp.content
-
