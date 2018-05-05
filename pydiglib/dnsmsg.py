@@ -1,5 +1,6 @@
 
 import socket, struct, time, string, base64, math
+import binascii
 
 from .options import options
 from .common import *
@@ -196,7 +197,9 @@ class DNSquery:
         self.ad = options["ad"]
         self.cd = options["cd"]
         self.mk_question()
-        self.msglen_without_opt = 12 + len(self.question)
+        if (qtype == 251) and options["serial"]:                    # IXFR
+            self.add_soa(options["serial"])
+        self.msglen_without_opt = 12 + len(self.question) + len(self.authority)
         if options["do_tsig"]:
             self.tsig = options["tsig"]
             self.msglen_without_opt += self.tsig.get_rr_length()
@@ -262,7 +265,27 @@ class DNSquery:
     def assemble_message(self):
         self.message = self.header + \
                        self.question + \
+                       self.authority + \
                        self.additional
+
+    def add_soa(self, serial):
+        self.rd = 0
+        self.nscount += 1
+        self.packed_nscount = struct.pack('!H', self.nscount)
+        rrname = b'\xc0\x0c'             # pointer to earlier qname
+        rrtype = struct.pack('!H', qt.get_val("SOA"))
+        rrclass = b'\x00\x01'
+        ttl = b'\x00\x00\x00\x00'
+        rdata = b'\x00' + \
+                b'\x00' + \
+                struct.pack('!I', serial) + \
+                b'\x00\x00\x00\x00' + \
+                b'\x00\x00\x00\x00' + \
+                b'\x00\x00\x00\x00' + \
+                b'\x00\x00\x00\x00'
+        rdlen = struct.pack('!H', len(rdata))
+        self.authority = rrname + rrtype + rrclass + ttl + \
+                         rdlen + rdata
 
     def add_tsig(self):
         self.tsig_rr = self.tsig.mk_request_tsig(self.txid, self.message)

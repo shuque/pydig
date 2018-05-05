@@ -59,6 +59,10 @@ Options:
         +tls_fallback             Fallback from TLS to TCP on TLS failure
         +tls_hostname=name        Check hostname in TLS server certificate
 
+
+IXFR (Incremental Zone Transfer) queries are supported with the syntax
+of "IXFR=NNNN" for the <qtype>, where NNNN is the zone serial number.
+
 Example usage:
 
        pydig www.example.com

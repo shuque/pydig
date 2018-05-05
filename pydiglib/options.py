@@ -208,8 +208,12 @@ def parse_args(arglist):
         qname = ip2ptr(qname); qtype = "PTR"; qclass = "IN"
     elif qtype in ['OPENPGPKEY', 'SMIMEA'] and qname.find('@') != -1:
         qname = uid2ownername(qname, qtype)
-    else:
-        if not qname.endswith("."): qname += "."
+    elif qtype.startswith("IXFR="):
+        options["serial"] = int(qtype[5:])
+        qtype = "IXFR"
+
+    if not qname.endswith("."):
+        qname += "."
 
     return (qname, qtype, qclass)
 

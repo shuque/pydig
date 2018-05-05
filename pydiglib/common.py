@@ -142,6 +142,7 @@ options = dict(
     ednsopt=[],
     bufsize=EDNS0_UDPSIZE,
     dnssec_ok=0,
+    serial=None,                                   # for IXFR queries
     hexrdata=False,
     do_zonewalk=False,
     nsid=False,
