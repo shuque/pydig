@@ -181,6 +181,14 @@ def parse_args(arglist):
             tsig.setkey(name, key, alg)
             options["do_tsig"] = True
 
+        elif arg == "+https":
+            options["https"] = True
+
+        elif arg.startswith("+https="):
+            options["https"] = True
+            options["https_url"] = arg[7:]
+            dprint("HTTPS URL set to: {}".format(options["https_url"]))
+
         else:
             break
 

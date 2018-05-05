@@ -15,7 +15,7 @@ TIMEOUT_MAX    = 10
 BUFSIZE        = 65535                 # socket read/write buffer size
 EDNS0_UDPSIZE  = 4096
 PAD_BLOCK_SIZE = 128
-
+DEFAULT_URL    = 'https://cloudflare-dns.com/dns-query'
 size_query = 0
 size_response = 0
 
@@ -65,6 +65,7 @@ Options:
         +tls_port=N               use N as the TLS port (default is 853)
         +tls_fallback             Fallback from TLS to TCP on TLS failure
         +tls_hostname=name        Check hostname in TLS server certificate
+        +https[=url]              use HTTPS transport with optional URL
 """.format(PROGNAME, PROGDESC, VERSION)
 
 
@@ -164,4 +165,7 @@ options = dict(
     tls_port=DEFAULT_PORT_TLS,
     tls_fallback=False,
     tls_hostname=None,
+    have_https=False,
+    https=False,
+    https_url=DEFAULT_URL,
 )

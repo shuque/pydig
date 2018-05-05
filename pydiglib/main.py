@@ -9,6 +9,7 @@ from .dnsparam import *
 from .dnsmsg import *
 from .query import *
 from .walk import zonewalk
+from .https import *
 
 
 def main(args):
@@ -71,6 +72,21 @@ def main(args):
                   (server_addr, options["tls_port"]))
             if not options["tls_fallback"]:
                 return 2
+
+    if options["https"]:
+        if not options["have_https"]:
+            raise ErrorMessage("HTTPS not supported")
+        t1 = time.time()
+        responsepkt = send_request_https(requestpkt, options["https_url"])
+        t2 = time.time()
+        if responsepkt:
+            size_response = len(responsepkt)
+            print(";; HTTPS response from %s, %d bytes, in %.3f sec" %
+                  (options["https_url"], size_response, (t2-t1)))
+            response = DNSresponse(family, query, responsepkt)
+        else:
+            print(";; HTTPS respone failure from %s" % options["https_url"])
+            return 2
 
     elif not options["use_tcp"]:
         t1 = time.time()

@@ -167,6 +167,8 @@ dnssec_alg = {
     12:"ECC-GOST",
     13:"ECDSAP256SHA256", 
     14:"ECDSAP384SHA384",
+    15:"ED25519",
+    16:"ED448",
 }
 
 # DNSSEC Digest algorithms (see RFC 4509 and RFC 6605)
