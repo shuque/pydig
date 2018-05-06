@@ -77,13 +77,10 @@ Example usage:
        pydig @192.168.14.7 -yhmac-md5:my.secret.key.:YWxidXMgZHVtYmxlZG9yZSByaWNoYXJkIGRhd2tpbnM= example.com axfr
        pydig @192.168.14.7 -yhmac-sha256:my.secret.key.:NBGFWFr+rR/uu14B94Ab1+u81M2DTqB65gOv16nG8Xw= example.com axfr
        pydig @185.49.141.38 +tls=auth +tls_hostname=getdnsapi.net www.ietf.org AAAA
+       pydig +padding=256 blah.example.com AAAA
+       pydig +https www.ietf.org A
 
-Limitations:
-
-	Certain combinations of options don't make any sense (eg.
-	+tcp and +edns0). pydig doesn't bother to check that, and 
-	just ignores the nonsensical ones. Certain options also 
-	imply other options, eg. +walk and +dnssec imply +edns0.
+Notes:
 
 	For TSIG (Transaction Signature) signed messages, the program
 	supports HMAC-MD5/SHA1/SHA256/SHA384/SHA256. It doesn't yet
@@ -96,21 +93,15 @@ Limitations:
 
 	Specific features of TLS depend on the version of Python in
 	use. TLS server certificate verification and hostname 
-	verification require quite recent versions of Python 2.7.x.
+	verification require quite recent versions of Python.
+
+	HTTPS support requires the "requests" module. If no URL
+	is specified via the +https option, then by default Cloudflare's
+	DNS over HTTPS server is queried (https://cloudflare-dns.com/dns-query).
 
 Pre-requisites:
 
 	Python 2.7 (or later) or Python 3.x
-
-Platforms:
-
-	Tested on the following platforms:
-		Solaris 8, 9, 10, and 11
-		Linux 2.x
-		FreeBSD 9.x and 10.x
-		Mac OS X 10.4 through 10.7
-
-	and with Python 2.7.x and Python 3.x.
 
 Installation:
 
