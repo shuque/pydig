@@ -41,7 +41,7 @@ def parse_args(arglist):
     qclass = "IN"
     
     i=0
-    tsig = options["tsig"] = Tsig()
+    tsig = None
     
     for (i, arg) in enumerate(arglist):
 
@@ -165,17 +165,20 @@ def parse_args(arglist):
         elif arg == "-d":
             options['DEBUG'] = True
 
+        elif arg.startswith("-i"):
+            options["msgid"] = int(arg[2:])
+
         elif arg.startswith("-k"):
+            tsig = options["tsig"] = Tsig()
             tsig_file = arg[2:]
             name, key = read_tsig_params(tsig_file)
             tsig.setkey(name, key)
             options["do_tsig"] = True
 
-        elif arg.startswith("-i"):
-            options["msgid"] = int(arg[2:])
-
         elif arg.startswith("-y"):
-            # -y overrides -k, if both are specified
+            if tsig:
+                raise ErrorMessage("-y: attempt to re-specify TSIG parameters")
+            tsig = options["tsig"] = Tsig()
             alg, name, key = arg[2:].split(":")
             key = base64.decodestring(key.encode())
             tsig.setkey(name, key, alg)

@@ -1,9 +1,7 @@
-
 import os, sys, socket, time
 
 from .common import *
 from .options import options, parse_args
-from .tsig import Tsig
 from .util import *
 from .dnsparam import *
 from .dnsmsg import *
@@ -13,14 +11,10 @@ from .https import *
 
 
 def main(args):
+
     """ main function"""
+
     sys.excepthook = excepthook
-    global count_compression
-    tsig = Tsig()                          # instantiate Tsig object
-
-    if len(args) == 1:
-        raise UsageError('')
-
     random_init()
 
     try:
@@ -45,20 +39,35 @@ def main(args):
         zonewalk(server_addr, port, family, qname, options)
         sys.exit(0)
 
-    requestpkt = query.get_message()
-    size_query = len(requestpkt)
+    request = query.get_message()
+    size_query = len(request)
 
     if qtype == "AXFR":
-        responses = do_axfr(query, requestpkt, server_addr, port, family)
+        responses = do_axfr(query, request, server_addr, port, family)
         sys.exit(0)
 
     # the rest is for non AXFR queries ..
 
     response = None
 
-    if options["tls"]:
+    if options["https"]:
+        if not options["have_https"]:
+            raise ErrorMessage("HTTPS not supported")
         t1 = time.time()
-        responsepkt = send_request_tls(requestpkt, server_addr, 
+        responsepkt = send_request_https(request, options["https_url"])
+        t2 = time.time()
+        if responsepkt:
+            size_response = len(responsepkt)
+            print(";; HTTPS response from %s, %d bytes, in %.3f sec" %
+                  (options["https_url"], size_response, (t2-t1)))
+            response = DNSresponse(family, query, responsepkt)
+        else:
+            print(";; HTTPS respone failure from %s" % options["https_url"])
+            return 2
+
+    elif options["tls"]:
+        t1 = time.time()
+        responsepkt = send_request_tls(request, server_addr,
                                        options["tls_port"], family,
                                        hostname=options["tls_hostname"])
         t2 = time.time()
@@ -73,25 +82,10 @@ def main(args):
             if not options["tls_fallback"]:
                 return 2
 
-    if options["https"]:
-        if not options["have_https"]:
-            raise ErrorMessage("HTTPS not supported")
-        t1 = time.time()
-        responsepkt = send_request_https(requestpkt, options["https_url"])
-        t2 = time.time()
-        if responsepkt:
-            size_response = len(responsepkt)
-            print(";; HTTPS response from %s, %d bytes, in %.3f sec" %
-                  (options["https_url"], size_response, (t2-t1)))
-            response = DNSresponse(family, query, responsepkt)
-        else:
-            print(";; HTTPS respone failure from %s" % options["https_url"])
-            return 2
-
     elif not options["use_tcp"]:
         t1 = time.time()
         (responsepkt, responder_addr) = \
-                      send_request_udp(requestpkt, server_addr, port, family,
+                      send_request_udp(request, server_addr, port, family,
                                        ITIMEOUT, RETRIES)
         t2 = time.time()
         size_response = len(responsepkt)
@@ -117,7 +111,7 @@ def main(args):
             print(";; TLS fallback to TCP ...")
         if not options["ignore"]:
             t1 = time.time()
-            responsepkt = send_request_tcp2(requestpkt, server_addr, port, family)
+            responsepkt = send_request_tcp2(request, server_addr, port, family)
             t2 = time.time()
             size_response = len(responsepkt)
             print(";; TCP response from %s, %d bytes, in %.3f sec" %

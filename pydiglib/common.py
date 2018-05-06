@@ -157,6 +157,7 @@ options = dict(
     ptr=False,
     af=socket.AF_UNSPEC,
     do_tsig=False,
+    tsig=None,                                      # Tsig() object
     tsig_sigtime=None,
     unsigned_messages="",
     msgid=None,
