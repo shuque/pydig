@@ -210,6 +210,8 @@ class DNSquery:
         self.assemble_message()
         if options["do_tsig"]:
             self.add_tsig()
+            # tsig is computed over the entire message before adding the
+            # TSIG RR. So we need to re-assemble the message again now.
             self.assemble_header()
             self.assemble_message()
         self.msglen = len(self.message)
@@ -294,7 +296,7 @@ class DNSquery:
         self.additional += self.tsig_rr
 
     def __repr__(self):
-        return "<DNSquery: %s,%s,%s>" % (self.qname, self.qtype, self.qclass)
+        return "<DNSquery: {},{},{}>".format(self.qname, self.qtype, self.qclass)
 
 
 class DNSresponse:
@@ -453,7 +455,8 @@ class DNSresponse:
                         self.print_rr(rrname, ttl, rrtype, rrclass, rdata)
 
     def __repr__(self):
-        return "<DNSresponse>"
+        return "<DNSresponse: {},{},{}>".format(
+            self.qname, self.qtype, self.qclass)
 
 
 def print_optrr(rcode, rrclass, ttl, rdata):
