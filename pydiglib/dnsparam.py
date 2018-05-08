@@ -205,4 +205,6 @@ edns_opt = {
     11: "Keepalive",
     12: "Padding",
     13: "Chain",
+    14: "Key Tag",
+    26946: "DeviceID (OpenDNS)",
 }

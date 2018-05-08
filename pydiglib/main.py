@@ -17,15 +17,18 @@ def main(args):
     sys.excepthook = excepthook
     random_init()
 
-    try:
-        qname, qtype, qclass = parse_args(args[1:])
-        qtype_val = qt.get_val(qtype)
-        qclass_val = qc.get_val(qclass)
-    except (ValueError, IndexError, KeyError) as e:
-        raise UsageError("Incorrect program usage: %s" % e)
+    qname, qtype, qclass = parse_args(args[1:])
 
-    if options["do_0x20"]:
-        qname = randomize_case(qname)
+    try:
+        qtype_val = qt.get_val(qtype)
+    except KeyError:
+        raise UsageError("ERROR: invalid query type: {}\n".format(qtype))
+
+    try:
+        qclass_val = qc.get_val(qclass)
+    except KeyError:
+        raise UsageError("ERROR: invalid query class: {}\n".format(qtype))
+
     query = DNSquery(qname, qtype_val, qclass_val)
         
     try:
@@ -40,7 +43,6 @@ def main(args):
         sys.exit(0)
 
     request = query.get_message()
-    size_query = len(request)
 
     if qtype == "AXFR":
         responses = do_axfr(query, request, server_addr, port, family)
@@ -52,17 +54,16 @@ def main(args):
 
     if options["https"]:
         if not options["have_https"]:
-            raise ErrorMessage("HTTPS not supported")
+            raise ErrorMessage("DNS over HTTPS not supported")
         t1 = time.time()
         responsepkt = send_request_https(request, options["https_url"])
         t2 = time.time()
         if responsepkt:
-            size_response = len(responsepkt)
-            print(";; HTTPS response from %s, %d bytes, in %.3f sec" %
-                  (options["https_url"], size_response, (t2-t1)))
             response = DNSresponse(family, query, responsepkt)
+            print(";; HTTPS response from %s, %d bytes, in %.3f sec" %
+                  (options["https_url"], response.msglen, (t2-t1)))
         else:
-            print(";; HTTPS respone failure from %s" % options["https_url"])
+            print(";; HTTPS response failure from %s" % options["https_url"])
             return 2
 
     elif options["tls"]:
@@ -72,10 +73,9 @@ def main(args):
                                        hostname=options["tls_hostname"])
         t2 = time.time()
         if responsepkt:
-            size_response = len(responsepkt)
-            print(";; TLS response from %s, %d bytes, in %.3f sec" %
-                  ( (server_addr, options["tls_port"]), size_response, (t2-t1)))
             response = DNSresponse(family, query, responsepkt)
+            print(";; TLS response from %s, %d bytes, in %.3f sec" %
+                  ((server_addr, options["tls_port"]), response.msglen, (t2-t1)))
         else:
             print(";; TLS response failure from %s, %d" %
                   (server_addr, options["tls_port"]))
@@ -88,13 +88,12 @@ def main(args):
                       send_request_udp(request, server_addr, port, family,
                                        ITIMEOUT, RETRIES)
         t2 = time.time()
-        size_response = len(responsepkt)
         if not responsepkt:
             raise ErrorMessage("No response from server")
         response = DNSresponse(family, query, responsepkt)
         if not response.tc:
             print(";; UDP response from %s, %d bytes, in %.3f sec" %
-                  (responder_addr, size_response, (t2-t1)))
+                  (responder_addr, response.msglen, (t2-t1)))
             if not is_multicast(server_addr) and \
                server_addr != "0.0.0.0" and responder_addr[0] != server_addr:
                 print("WARNING: Response from unexpected address %s" %
@@ -113,13 +112,11 @@ def main(args):
             t1 = time.time()
             responsepkt = send_request_tcp2(request, server_addr, port, family)
             t2 = time.time()
-            size_response = len(responsepkt)
-            print(";; TCP response from %s, %d bytes, in %.3f sec" %
-                  ( (server_addr, port), size_response, (t2-t1)))
             response = DNSresponse(family, query, responsepkt)
+            print(";; TCP response from %s, %d bytes, in %.3f sec" %
+                  ((server_addr, port), response.msglen, (t2-t1)))
 
-    response.print_preamble(options)
-    response.decode_sections()
+    response.print_all()
     dprint("Compression pointer dereferences=%d" % Stats.compression_cnt)
 
     return response.rcode

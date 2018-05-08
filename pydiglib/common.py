@@ -16,8 +16,6 @@ BUFSIZE        = 65535                 # socket read/write buffer size
 EDNS0_UDPSIZE  = 4096
 PAD_BLOCK_SIZE = 128
 DEFAULT_URL    = 'https://cloudflare-dns.com/dns-query'
-size_query = 0
-size_response = 0
 
 class Stats:
     """Statistics counters"""

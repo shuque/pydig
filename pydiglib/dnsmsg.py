@@ -42,8 +42,11 @@ class DNSquery:
     msglen = 0
 
     def __init__(self, qname, qtype, qclass, minimize=False):
-        self.qname = qname
-        self.orig_qname = self.qname
+        if options["do_0x20"]:
+            self.qname = randomize_case(qname)
+            self.orig_qname = self.qname
+        else:
+            self.qname = qname
         self.qtype = qtype
         self.qclass = qclass
         self.minimize = minimize
@@ -176,12 +179,13 @@ class DNSresponse:
     ancount = None
     nscount = None
     arcount = None
+    msglen = 0
 
     def __init__(self, family, query, pkt, used_tcp=False, checkid=True):
         self.family = family
         self.query = query
-        self.requestpkt = query.get_message()
         self.pkt = pkt
+        self.msglen = len(pkt)
         self.used_tcp = used_tcp
         self.decode_header(pkt, checkid)
 
@@ -206,8 +210,6 @@ class DNSresponse:
 
     def print_ampratio(self):
         """Print packet amplification ratios"""
-        size_response = len(self.pkt)
-        size_query = len(self.requestpkt)
         if self.family == socket.AF_INET:
             overhead = 42                # Ethernet + IPv4 + UDP header
         elif self.family == socket.AF_INET6:
@@ -217,16 +219,16 @@ class DNSresponse:
 
         # amp1: ratio of only the DNS response payload & query payload
         # amp2: estimated ratio of the full packets assuming Ethernet link
-        amp1 = (size_response * 1.0/size_query)
-        w_qsize = size_query + overhead
-        w_rsize = size_response + \
-                  overhead * math.ceil(size_response/(1500.0-overhead))
+        amp1 = (self.msglen * 1.0/self.query.msglen)
+        w_qsize = self.query.msglen + overhead
+        w_rsize = self.msglen + \
+                  overhead * math.ceil(self.msglen/(1500.0-overhead))
         amp2 = w_rsize/w_qsize
 
         print(";; Size query=%d, response=%d, amp1=%.2f amp2=%.2f" %
-              (size_query, size_response, amp1, amp2))
+              (self.query.msglen, self.msglen, amp1, amp2))
     
-    def print_preamble(self, options):
+    def print_preamble(self):
         """Print preamble of a DNS response message"""
         if options["do_0x20"]:
             print(";; 0x20-hack qname: %s" % self.query.qname)
@@ -309,6 +311,11 @@ class DNSresponse:
                         print_optrr(self.rcode, rrclass, ttl, rdata)
                     else:
                         self.print_rr(rrname, ttl, rrtype, rrclass, rdata)
+
+    def print_all(self):
+        """Print all info about the DNS response message"""
+        self.print_preamble()
+        self.decode_sections()
 
     def __repr__(self):
         return "<DNSresponse: {},{},{}>".format(

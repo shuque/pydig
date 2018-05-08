@@ -194,6 +194,8 @@ def parse_args(arglist):
 
         else:
             break
+    else:
+        i += 1
 
     if not options["server"]:         # use 1st server listed in resolv.conf
         if os.name != 'nt':
@@ -209,22 +211,28 @@ def parse_args(arglist):
             if not options["server"]:
                 raise ErrorMessage("Couldn't find a default server")
 
-    qname = arglist[i]
+    if not arglist[i:]:
+        qname = "."
+        qtype = "NS"
+    else:
+        qname = arglist[i]
 
-    if not options["do_zonewalk"]:
-        if arglist[i+1:]:           qtype = arglist[i+1].upper()
-        if arglist[i+2:]:           qclass = arglist[i+2].upper()
+        if not options["do_zonewalk"]:
+            if arglist[i+1:]:
+                qtype = arglist[i+1].upper()
+            if arglist[i+2:]:
+                qclass = arglist[i+2].upper()
 
-    if options["ptr"]:
-        qname = ip2ptr(qname); qtype = "PTR"; qclass = "IN"
-    elif qtype in ['OPENPGPKEY', 'SMIMEA'] and qname.find('@') != -1:
-        qname = uid2ownername(qname, qtype)
-    elif qtype.startswith("IXFR="):
-        options["serial"] = int(qtype[5:])
-        qtype = "IXFR"
+        if options["ptr"]:
+            qname = ip2ptr(qname); qtype = "PTR"; qclass = "IN"
+        elif qtype in ['OPENPGPKEY', 'SMIMEA'] and qname.find('@') != -1:
+            qname = uid2ownername(qname, qtype)
+        elif qtype.startswith("IXFR="):
+            options["serial"] = int(qtype[5:])
+            qtype = "IXFR"
 
-    if not qname.endswith("."):
-        qname += "."
+        if not qname.endswith("."):
+            qname += "."
 
     return (qname, qtype, qclass)
 
