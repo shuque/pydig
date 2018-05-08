@@ -3,7 +3,6 @@ import os, sys, socket, base64
 from .common import *
 from .util import *
 from .tsig import Tsig, read_tsig_params
-from .windows import get_windows_default_dns
 
 
 def set_tls_options(arg):
@@ -197,19 +196,8 @@ def parse_args(arglist):
     else:
         i += 1
 
-    if not options["server"]:         # use 1st server listed in resolv.conf
-        if os.name != 'nt':
-            for line in open(RESOLV_CONF):
-                if line.startswith("nameserver"):
-                    options["server"] = line.split()[1]
-                    break
-            else:
-                raise ErrorMessage("Couldn't find a default server in %s" %
-                                   RESOLV_CONF)
-        else:
-            options["server"] = get_windows_default_dns()
-            if not options["server"]:
-                raise ErrorMessage("Couldn't find a default server")
+    if not options["server"]:
+        options["server"] = get_default_server()
 
     if not arglist[i:]:
         qname = "."

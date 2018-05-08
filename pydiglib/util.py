@@ -1,5 +1,7 @@
 import socket, struct, random, hashlib, binascii
 from .common import *
+from .windows import *
+
 
 class Struct:
     "Container class to emulate C struct or record."
@@ -233,6 +235,22 @@ def pdomainname(labels):
         return "."
     else:
         return ".".join(result_list)
+
+
+def get_default_server():
+    """get default DNS resolver address"""
+    if os.name != 'nt':
+        for line in open(RESOLV_CONF):
+            if line.startswith("nameserver"):
+                return line.split()[1]
+        else:
+            raise ErrorMessage("No default server in %s" % RESOLV_CONF)
+    else:
+        s = get_windows_default_dns()
+        if not s:
+            raise ErrorMessage("Couldn't find a default server")
+        else:
+            return s
 
 
 def uid2ownername(uid, qtype):
