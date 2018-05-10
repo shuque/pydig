@@ -44,7 +44,7 @@ def main(args):
 
     request = query.get_message()
 
-    if qtype == "AXFR":
+    if (qtype == "AXFR") or (qtype == "IXFR" and options["use_tcp"]):
         responses = do_axfr(query, request, server_addr, port, family)
         sys.exit(0)
 
