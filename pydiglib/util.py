@@ -51,13 +51,6 @@ def randomize_case(input):
     return "".join(outlist)
 
 
-def domain_name_match(s1, s2, case_sensitive=False):
-    if case_sensitive:
-        return (s1 == s2)
-    else:
-        return (s1.lower() == s2.lower())
-    
-
 def ip2ptr(address):
     """return PTR owner name of an IPv4 or IPv6 address (for -x option)"""
     v4_suffix = '.in-addr.arpa.'
@@ -166,77 +159,6 @@ def hmac(key, data, func):
     return m.digest()
 
                                 
-def txt2domainname(input, canonical_form=False):
-    """turn textual representation of a domain name into its wire format"""
-    if input == ".":
-        d = b'\x00'
-    else:
-        d = b""
-        for label in input.split('.'):
-            label = label.encode('ascii')
-            if canonical_form:
-                label = label.lower()
-            length = len(label)
-            d += struct.pack('B', length) + label
-    return d
-
-
-def get_domainname(pkt, offset, c_offset_list):
-    """decode a domainname at the given packet offset; see RFC 1035
-    c_offset_list is a list of compression offsets seen so far
-    for the current domain name."""
-
-    labellist = []               # a domainname is a sequence of labels
-    Done = False
-    while not Done:
-        llen, = struct.unpack('B', pkt[offset:offset+1])
-        if (llen >> 6) == 0x3:                 # compression pointer, sec 4.1.4
-            Stats.compression_cnt += 1
-            c_offset, = struct.unpack('!H', pkt[offset:offset+2])
-            c_offset = c_offset & 0x3fff       # last 14 bits
-            if c_offset in c_offset_list:
-                raise ErrorMessage("Found compression pointer loop.")
-            c_offset_list.append(c_offset)
-            offset +=2
-            rightmostlabels, junk = get_domainname(pkt, c_offset, c_offset_list)
-            labellist += rightmostlabels
-            Done = True
-        else:
-            offset += 1
-            label = pkt[offset:offset+llen]
-            offset += llen
-            labellist.append(label)
-            if llen == 0:
-                Done = True
-    return (labellist, offset)
-
-
-def pdomainname(labels):
-    """given a sequence of domainname labels, return a quoted printable text
-    representation of the domain name"""
-
-    printables = b'0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-*+'
-    result_list = []
-
-    for label in labels:
-        result = ''
-        for c in label:
-            if isinstance(c, int):
-                c_int, c_chr = c, chr(c)
-            else:
-                c_int, c_chr = ord(c), c.decode()
-            if c in printables:
-                result += c_chr
-            else:
-                result += ("\\%03d" % c_int)
-        result_list.append(result)
-
-    if result_list == ['']:
-        return "."
-    else:
-        return ".".join(result_list)
-
-
 def get_default_server():
     """get default DNS resolver address"""
     if os.name != 'nt':

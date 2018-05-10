@@ -27,7 +27,7 @@ def main(args):
     try:
         qclass_val = qc.get_val(qclass)
     except KeyError:
-        raise UsageError("ERROR: invalid query class: {}\n".format(qtype))
+        raise UsageError("ERROR: invalid query class: {}\n".format(qclass))
 
     query = DNSquery(qname, qtype_val, qclass_val)
         

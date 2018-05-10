@@ -3,6 +3,7 @@ import socket, struct, base64, math
 from .options import options
 from .common import *
 from .dnsparam import *
+from .name import *
 from .util import *
 
 
@@ -91,7 +92,7 @@ class OptRR:
         if options["chainquery"] == True:
             optdata = b'\x00'
         else:
-            optdata = txt2domainname(options["chainquery"])
+            optdata = name_from_text(options["chainquery"]).to_wire()
         optlen = struct.pack('!H', len(optdata))
         return optcode + optlen + optdata
 

@@ -1,6 +1,7 @@
 from .common import *
 from .dnsparam import *
 from .dnsmsg import *
+from .name import *
 from .query import *
 
 
@@ -37,7 +38,7 @@ def print_answer_rr(server_addr, port, family, qname, qtype, options):
         rrname, rrtype, rrclass, ttl, rdata, offset = \
                     decode_rr(r, offset, False)
         print("%s\t%d\t%s\t%s\t%s" % 
-              (pdomainname(rrname), ttl,
+              (rrname.to_text(), ttl,
                qc.get_name(rrclass), qt.get_name(rrtype), rdata))
     return
     
@@ -45,7 +46,7 @@ def print_answer_rr(server_addr, port, family, qname, qtype, options):
 def zonewalk(server_addr, port, family, qname, options):
     """perform zone walk of zone containing the specified qname"""
     print(";;\n;; Performing walk of zone containing %s\n;;" % qname)
-    start_qname = qname
+    start_qname = name_from_text(qname)
     nsec_count = 0
     options["use_edns"] = True
     options["dnssec_ok"] = False
@@ -78,17 +79,15 @@ def zonewalk(server_addr, port, family, qname, options):
 
         domainname, rrtype, rrclass, ttl, nextrr, rrtypelist, offset = \
                     decode_nsec_rr(r, offset)
-        rrname = pdomainname(domainname)
         nsec_count += 1
         if (nsec_count !=1) and \
-           (domain_name_match(rrname, nextrr) or
-            domain_name_match(rrname, start_qname)):
+           (name_match(domainname, nextrr) or name_match(domainname, start_qname)):
             break
 
         for rrtype in rrtypelist:
             dprint("Querying RR %s %s .." % (qname, rrtype))
             print_answer_rr(server_addr, port, family, qname, rrtype, options)
-        qname = nextrr
+        qname = nextrr.to_text()
         time.sleep(0.3)                          # be nice
     return
 
