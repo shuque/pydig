@@ -12,10 +12,6 @@ from .util import *
 class DNSquery:
     """DNS Query class"""
 
-    tsig = None
-    msglen_without_opt = 0
-    msglen = 0
-
     def __init__(self, qname, qtype, qclass, minimize=False):
         if options["do_0x20"]:
             self.qname = randomize_case(qname)
@@ -40,18 +36,19 @@ class DNSquery:
         if options["use_edns"]:
             self.mk_additional()
         self.mk_header_fields()
-        self.assemble_header()
         self.assemble_message()
         if options["do_tsig"]:
             self.add_tsig()
             # tsig is computed over the entire message before adding the
             # TSIG RR. So we need to re-assemble the message again now.
-            self.assemble_header()
             self.assemble_message()
         self.msglen = len(self.message)
 
     def get_message(self):
         return self.message
+
+    def get_length(self):
+        return self.msglen
 
     def set_txid(self):
         if options["msgid"]:
@@ -95,14 +92,6 @@ class DNSquery:
         self.packed_nscount = struct.pack('!H', self.nscount)
         self.packed_arcount = struct.pack('!H', self.arcount)
 
-    def assemble_header(self):
-        self.header = self.packed_txid + \
-                      self.flags + \
-                      self.packed_qdcount + \
-                      self.packed_ancount + \
-                      self.packed_nscount + \
-                      self.packed_arcount
-
     def mk_question(self):
         wire_qname = self.qname.wire()
         self.question = wire_qname + struct.pack('!H', self.qtype) + \
@@ -117,7 +106,12 @@ class DNSquery:
         self.additional = Opt.mk_optrr(msglen=self.msglen_without_opt)
 
     def assemble_message(self):
-        self.message = self.header + \
+        self.message = self.packed_txid + \
+                       self.flags + \
+                       self.packed_qdcount + \
+                       self.packed_ancount + \
+                       self.packed_nscount + \
+                       self.packed_arcount + \
                        self.question + \
                        self.authority + \
                        self.additional
@@ -155,10 +149,8 @@ class DNSresponse:
     """DNS Response class"""
 
     cnt_compression = 0
-    # sections: list of tuples of (text name, rrcount)
     sections = [ "QUESTION", "ANSWER", "AUTHORITY", "ADDITIONAL" ]
     print_section_bitmap = 0b1111           # default: print all sections
-    msglen = 0
 
     def __init__(self, family, query, msg, used_tcp=False, checkid=True):
         self.family = family
