@@ -13,7 +13,7 @@ class Name:
         if text:
             self.text = text
 
-    def to_wire(self, canonical_form=False):
+    def wire(self, canonical_form=False):
         """Return uncompressed wire format of domain name."""
         wire = b''
         for label in self.labels:
@@ -22,7 +22,7 @@ class Name:
             wire += struct.pack('B', len(label)) + label
         return wire
 
-    def to_text(self, escape=True):
+    def text(self, escape=True):
         """Return textual representation of domain name."""
         result_list = []
 
@@ -45,7 +45,7 @@ class Name:
             return ".".join(result_list)
 
     def __repr__(self):
-        return "<Name: {}>".format(self.to_text())
+        return "<Name: {}>".format(self.text())
 
 
 def name_from_text(input):

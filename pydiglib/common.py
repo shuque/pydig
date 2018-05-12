@@ -97,7 +97,7 @@ class UsageError(ErrorMessage):
 def excepthook(exc_type, exc_value, exc_traceback):
     """Print tracebacks for unexpected exceptions, not friendly errors."""
     if issubclass(exc_type, ErrorMessage):
-        junk = sys.stderr.write("{}\n".format(exc_value))
+        _ = sys.stderr.write("{}\n".format(exc_value))
     else:
         sys.__excepthook__(exc_type, exc_value, exc_traceback)
 

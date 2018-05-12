@@ -92,7 +92,7 @@ class OptRR:
         if options["chainquery"] == True:
             optdata = b'\x00'
         else:
-            optdata = name_from_text(options["chainquery"]).to_wire()
+            optdata = name_from_text(options["chainquery"]).wire()
         optlen = struct.pack('!H', len(optdata))
         return optcode + optlen + optdata
 

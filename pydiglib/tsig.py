@@ -83,8 +83,8 @@ class Tsig:
         computed. This is needed to figure out the amount of EDNS padding,
         since the padding option in the OPT RR precedes the TSIG RR.
         """
-        return len(self.keyname.to_wire()) + 10 + \
-            len(self.algorithm.to_wire()) + 16 + \
+        return len(self.keyname.wire()) + 10 + \
+            len(self.algorithm.wire()) + 16 + \
             self.algorithm_len
 
     def mk_request_tsig(self, msgid, msg):
@@ -92,11 +92,11 @@ class Tsig:
 
         # strictly speaking, we only need tsig name/alg in canonical form
         # for the MAC computation, but we'll use them in the RR also ..
-        tsig_name = self.keyname.to_wire(canonical_form=True)
+        tsig_name = self.keyname.wire(canonical_form=True)
         tsig_type = struct.pack('!H', qt.get_val("TSIG"))
         tsig_class = struct.pack('!H', qc.get_val("ANY"))
         tsig_ttl = struct.pack('!I', 0)
-        tsig_alg = self.algorithm.to_wire(canonical_form=True)
+        tsig_alg = self.algorithm.wire(canonical_form=True)
         now = int(time.time())
         tsig_sigtime = mk_tsig_sigtime(now)
         tsig_fudge = struct.pack('!H', self.request.fudge)
@@ -140,7 +140,7 @@ class Tsig:
                               = struct.unpack("!HHH", pkt[offset:offset+6])
         offset += 6
         result = "%s %ld %d %d %s %d %s %d" % \
-                 (self.response.alg.to_text(),
+                 (self.response.alg.text(),
                   self.response.sigtime,
                   self.response.fudge,
                   self.response.mac_size,
@@ -174,11 +174,10 @@ class Tsig:
         dns_message = (struct.pack('!H', self.response.origid) + data[2:10] +
                        struct.pack('!H', arcount-1) + data[12:])
 
-        tsig_name = self.response.tsig_name.to_wire(
-            canonical_form=True)
+        tsig_name = self.response.tsig_name.wire(canonical_form=True)
         tsig_class = struct.pack('!H', qc.get_val("ANY"))
         tsig_ttl = struct.pack('!I', 0)
-        tsig_alg = self.algorithm.to_wire(canonical_form=True)
+        tsig_alg = self.algorithm.wire(canonical_form=True)
         tsig_sigtime = mk_tsig_sigtime(self.response.sigtime)
         tsig_fudge = struct.pack('!H', self.response.fudge)
         tsig_error = struct.pack('!H', self.response.error)

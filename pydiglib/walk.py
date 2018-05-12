@@ -27,7 +27,7 @@ def print_answer_rr(server_addr, port, family, qname, qtype, options):
     offset = 12                     # skip over DNS header
 
     for i in range(response.qdcount):
-        domainname, rrtype, rrclass, offset = decode_question(r, offset)
+        domainname, rrtype, rrclass, offset = response.decode_question(offset)
 
     if response.ancount == 0:
         dprint("Warning: no answer RRs found for %s,%s" % \
@@ -38,7 +38,7 @@ def print_answer_rr(server_addr, port, family, qname, qtype, options):
         rrname, rrtype, rrclass, ttl, rdata, offset = \
                     decode_rr(r, offset, False)
         print("%s\t%d\t%s\t%s\t%s" % 
-              (rrname.to_text(), ttl,
+              (rrname.text(), ttl,
                qc.get_name(rrclass), qt.get_name(rrtype), rdata))
     return
     
@@ -75,7 +75,7 @@ def zonewalk(server_addr, port, family, qname, options):
         offset = 12                     # skip over DNS header
 
         for i in range(response.qdcount):        # skip over question section
-            domainname, rrtype, rrclass, offset = decode_question(r, offset)
+            domainname, rrtype, rrclass, offset = response.decode_question(offset)
 
         domainname, rrtype, rrclass, ttl, nextrr, rrtypelist, offset = \
                     decode_nsec_rr(r, offset)
@@ -87,7 +87,7 @@ def zonewalk(server_addr, port, family, qname, options):
         for rrtype in rrtypelist:
             dprint("Querying RR %s %s .." % (qname, rrtype))
             print_answer_rr(server_addr, port, family, qname, rrtype, options)
-        qname = nextrr.to_text()
+        qname = nextrr.text()
         time.sleep(0.3)                          # be nice
     return
 
