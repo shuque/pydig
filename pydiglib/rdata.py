@@ -202,17 +202,19 @@ def decode_rrsig_rdata(pkt, offset, rdlen):
     end_rdata = offset + rdlen
     type_covered, alg, labels, orig_ttl, sig_exp, sig_inc, keytag = \
           struct.unpack('!HBBIIIH', pkt[offset:offset+18])
-    sig_exp = time.strftime("%Y%m%d%H%M%S", time.gmtime(sig_exp))
-    sig_inc = time.strftime("%Y%m%d%H%M%S", time.gmtime(sig_inc))
+    sig_exp_text = time.strftime("%Y%m%d%H%M%S", time.gmtime(sig_exp))
+    sig_inc_text = time.strftime("%Y%m%d%H%M%S", time.gmtime(sig_inc))
     d, offset = name_from_wire_message(pkt, offset+18)
     signer_name = d.text()
     signature = pkt[offset:end_rdata]
     retval = "{} {} {} {} {} {} {} {} {}".format(
         qt.get_name(type_covered), alg, labels, orig_ttl,
-        sig_exp, sig_inc, keytag, signer_name,
+        sig_exp_text, sig_inc_text, keytag, signer_name,
         base64.standard_b64encode(signature).decode('ascii'))
     if options['DEBUG']:
-        retval += " ; sigsize=%d" % (len(signature) * 8)
+        sig_validity = "%.2fd" % ((sig_exp - sig_inc) / 86400.0)
+        retval += " ; sigsize=%d, validity=%s" % \
+            (len(signature) * 8, sig_validity)
     return retval
 
 
