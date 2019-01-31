@@ -152,6 +152,9 @@ def parse_args(arglist):
         elif arg == "+0x20":
             options["do_0x20"] = True
 
+        elif arg == "+emptyquestion":
+            options["emptyquestion"] = True
+
         elif arg == "-4":
             options["af"] = socket.AF_INET
 
@@ -199,7 +202,9 @@ def parse_args(arglist):
     if not options["server"]:
         options["server"] = get_default_server()
 
-    if not arglist[i:]:
+    if options["emptyquestion"]:
+        qname = None
+    elif not arglist[i:]:
         qname = "."
         qtype = "NS"
     else:

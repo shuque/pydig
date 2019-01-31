@@ -18,7 +18,8 @@ class DNSquery:
             self.orig_qname = self.qname
         else:
             self.qname = qname
-        self.qname = name_from_text(self.qname)
+        if not options["emptyquestion"]:
+            self.qname = name_from_text(self.qname)
         self.qtype = qtype
         self.qclass = qclass
         self.set_txid()
@@ -69,7 +70,10 @@ class DNSquery:
         self.rcode = 0
 
     def set_section_counts(self):
-        self.qdcount = 1
+        if options["emptyquestion"]:
+            self.qdcount = 0
+        else:
+            self.qdcount = 1
         self.ancount = 0
         self.nscount = 0
         self.arcount = 0
@@ -93,9 +97,12 @@ class DNSquery:
         self.packed_arcount = struct.pack('!H', self.arcount)
 
     def mk_question(self):
-        wire_qname = self.qname.wire()
-        self.question = wire_qname + struct.pack('!H', self.qtype) + \
-                        struct.pack('!H', self.qclass)
+        if options["emptyquestion"]:
+            self.question = b""
+        else:
+            wire_qname = self.qname.wire()
+            self.question = wire_qname + struct.pack('!H', self.qtype) + \
+                struct.pack('!H', self.qclass)
 
     def mk_additional(self):
         Opt = OptRR(options["edns_version"],

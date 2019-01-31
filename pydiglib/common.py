@@ -52,6 +52,7 @@ Options:
         +padding[=N]              send EDNS padding option (defblocksize 128)
         +walk                     walk (enumerate) a DNSSEC secured zone
         +0x20                     randomize case of query name (bit 0x20 hack)
+        +emptyquestion            send an empty question section
         -4                        perform queries using IPv4
         -6                        perform queries using IPv6
         -x                        reverse lookup of IPv4/v6 address in qname
@@ -153,6 +154,7 @@ options = dict(
     padding_blocksize=None,
     do_0x20=False,
     ptr=False,
+    emptyquestion=False,
     af=socket.AF_UNSPEC,
     do_tsig=False,
     tsig=None,                                      # Tsig() object
