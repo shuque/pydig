@@ -1,23 +1,25 @@
-Program:	pydig (a DNS query tool written in Python)
-Version:	1.4.0
-Written by:	Shumon Huque <shuque@gmail.com>
+# pydig
 
-Description:
+Program:	pydig (a DNS query tool written in Python)  
+Version:	1.4.0  
+Written by:	Shumon Huque <shuque@gmail.com>  
 
-	A program to perform DNS queries and exercise various existing
-	and emerging features of the DNS protocol. It works mostly 
-	similar to the dig program that comes with ISC BIND. I wrote
-	it mostly for fun, and for helping me to learn more esoteric
-	features of the DNS. Occasionally I use this to quickly prototype
-	proposed enhancements to the DNS. Some of the more recent
-	such features include EDNS client subnet, chain query, cookies,
-	DNS over TLS, EDNS padding, DNS over HTTPS, and more.
+## Description
 
-	RR type and class codes (qtype and qclass) unknown to this 
-	program can be specified with the TYPE123 and CLASS123 syntax.
+pydig is a program to perform DNS queries and exercise various existing
+and emerging features of the DNS protocol. It is roughly modelled after the
+dig program that comes with ISC BIND. I wrote it mostly for fun, and to
+help me learn learn some of the more esoteric features of the DNS. Occasionally
+I use it to quickly prototype new and proposed enhancements to the DNS. Some of
+the more recent such features include EDNS client subnet, chain query, cookies,
+DNS over TLS, EDNS padding, DNS over HTTPS, and more.
 
-Usage:
+RR type and class codes (qtype and qclass) unknown to this program can be
+specified with the TYPE123 and CLASS123 syntax.
 
+## Usage
+
+```
 	pydig [list of options] <qname> [<qtype>] [<qclass>]
 	pydig @server +walk <zone>
 
@@ -47,7 +49,8 @@ Options:
         +hex                      print hexdump of rdata field
         +walk                     walk (enumerate) a DNSSEC secured zone
 	+0x20			  randomize case of query name (bit 0x20 hack)
-        -4                        perform queries with IPv4
+	+emptyquestion            send an empty question section
+	-4                        perform queries with IPv4
         -6                        perform queries with IPv6
         -d                        request additional debugging output
 	-k/path/to/keyfile        use TSIG key in specified file
@@ -59,11 +62,12 @@ Options:
         +tls_fallback             Fallback from TLS to TCP on TLS failure
         +tls_hostname=name        Check hostname in TLS server certificate
         +https[=url]              use HTTPS transport with optional URL
-
+```
 
 IXFR (Incremental Zone Transfer) queries are supported with the syntax
 of "IXFR=NNNN" for the <qtype>, where NNNN is the zone serial number.
 
+```
 Example usage:
 
        pydig www.example.com
@@ -79,33 +83,36 @@ Example usage:
        pydig @185.49.141.38 +tls=auth +tls_hostname=getdnsapi.net www.ietf.org AAAA
        pydig +padding=256 blah.example.com AAAA
        pydig +https www.ietf.org A
+```
 
-Notes:
+# Additional Notes
 
-	For TSIG (Transaction Signature) signed messages, the program
-	supports HMAC-MD5/SHA1/SHA256/SHA384/SHA256. It doesn't yet
-	support GSS-TSIG.
+For TSIG (Transaction Signature) signed messages, the program supports
+HMAC-MD5/SHA1/SHA256/SHA384/SHA256. It doesn't yet support GSS-TSIG.
 
-	It decodes but does not yet verify signatures in DNSSEC secured 
-	data.
+It decodes but does not yet verify signatures in DNSSEC secured data.
 
-	It does not perform iterative resolution (eg. dig's +trace).
+It does not perform iterative resolution (eg. dig's +trace).
 
-	Specific features of TLS depend on the version of Python in
-	use. TLS server certificate verification and hostname 
-	verification require quite recent versions of Python.
+Specific features of TLS depend on the version of Python in use. TLS server
+certificate verification and hostname verification require quite recent
+versions of Python.
 
-	HTTPS support requires the "requests" module. If no URL
-	is specified via the +https option, then by default Cloudflare's
-	DNS over HTTPS server is queried (https://cloudflare-dns.com/dns-query).
+HTTPS support requires the "requests" module. If no URL is specified via
+the +https option, then by default Cloudflare's DNS over HTTPS server is
+queried (https://cloudflare-dns.com/dns-query).
 
-Pre-requisites:
 
-	Python 2.7 (or later) or Python 3.x
+# Pre-requisites:
 
-Installation:
+* Python 2.7 (or later) or Python 3.x
 
-	1. (as root) python setup.py install
+
+# Installation:
+
+1. (as root) python setup.py install
+
+# License
 
 Shumon Huque
 E-mail: shuque -at- gmail.com
