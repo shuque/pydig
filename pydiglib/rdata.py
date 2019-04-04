@@ -320,6 +320,8 @@ def decode_rr(pkt, offset, hexrdata):
     rdata = pkt[offset:offset+rdlen]
     if hexrdata:
         rdata = hexdump(rdata)
+    elif options["generic"]:
+        rdata = generic_rdata_encoding(rdata, rdlen)
     elif rrtype == 1:                                        # A
         rdata = socket.inet_ntop(socket.AF_INET, rdata)
     elif rrtype in [2, 5, 12, 39]:                           # NS, CNAME, PTR

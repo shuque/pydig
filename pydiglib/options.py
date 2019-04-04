@@ -155,6 +155,9 @@ def parse_args(arglist):
         elif arg == "+emptyquestion":
             options["emptyquestion"] = True
 
+        elif arg == "+generic":
+            options["generic"] = True
+
         elif arg == "-4":
             options["af"] = socket.AF_INET
 

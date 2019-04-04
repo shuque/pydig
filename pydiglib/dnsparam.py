@@ -1,6 +1,6 @@
 import hashlib
 import struct
-
+from .common import options
 
 class DNSparam:
     """Class to encapsulate some DNS parameter types (type, class etc)"""
@@ -14,7 +14,10 @@ class DNSparam:
     def get_name(self, val):
         """given code (value), return text name of dns parameter"""
         if self.prefix:
-            return self.val2name.get(val, "%s%d" % (self.prefix, val))
+            if options["generic"]:
+                return "%s%d" % (self.prefix, val)
+            else:
+                return self.val2name.get(val, "%s%d" % (self.prefix, val))
         else:
             return self.val2name[val]
 

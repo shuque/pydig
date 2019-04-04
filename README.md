@@ -50,6 +50,7 @@ Options:
         +walk                     walk (enumerate) a DNSSEC secured zone
 	+0x20			  randomize case of query name (bit 0x20 hack)
 	+emptyquestion            send an empty question section
+        +generic                  use RFC3597 generic type/class/rdata format
 	-4                        perform queries with IPv4
         -6                        perform queries with IPv6
         -d                        request additional debugging output
