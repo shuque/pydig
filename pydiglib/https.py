@@ -30,8 +30,8 @@ else:
         """Send request via HTTPS"""
 
         headers = {
-            'Accept': 'application/dns-udpwireformat',
-            'Content-Type' : 'application/dns-udpwireformat',
+            'Accept': 'application/dns-message',
+            'Content-Type' : 'application/dns-message',
         }
         resp = requests.post(url, headers=headers, data=message,
                              timeout=HTTPS_TIMEOUT)
