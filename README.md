@@ -1,7 +1,7 @@
 # pydig
 
 Program:	pydig (a DNS query tool written in Python)  
-Version:	1.4.0  
+Version:	1.5.0
 Written by:	Shumon Huque <shuque@gmail.com>  
 
 ## Description
@@ -106,12 +106,12 @@ queried (https://cloudflare-dns.com/dns-query).
 
 # Pre-requisites:
 
-* Python 2.7 (or later) or Python 3.x
+* Python 3
 
 
 # Installation:
 
-1. (as root) python setup.py install
+1. (as root) python3 setup.py install
 
 # License
 

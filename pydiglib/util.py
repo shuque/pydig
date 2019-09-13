@@ -15,10 +15,7 @@ def random_init():
 
 def hexdump(inputbytes):
     """return a hexadecimal string representation of given byte string"""
-    if PYVERSION == 2:
-        return ''.join(["%02x" % ord(x) for x in inputbytes])
-    else:
-        return binascii.hexlify(inputbytes).decode('ascii')
+    return binascii.hexlify(inputbytes).decode('ascii')
 
 
 def h2bin(x):
@@ -30,10 +27,7 @@ def packed2int(input):
     """convert arbitrary sized bigendian byte-string into an integer"""
     sum = 0
     for (i, x) in enumerate(input[::-1]):
-        if PYVERSION == 2:
-            sum += ord(x) * 2**(8*i)
-        else:
-            sum += x * 2**(8*i)
+        sum += x * 2**(8*i)
     return sum
 
 
@@ -59,17 +53,11 @@ def ip2ptr(address):
     try:
         if address.find('.') != -1:                             # IPv4 address
             packed = socket.inet_pton(socket.AF_INET, address)
-            if PYVERSION == 2:
-                octetlist = ["%d" % ord(x) for x in packed]
-            else:
-                octetlist = ["%d" % x for x in packed]
+            octetlist = ["%d" % x for x in packed]
             ptrowner = "%s%s" % ('.'.join(octetlist[::-1]), v4_suffix)
         elif address.find(':') != -1:                           # IPv6 address
             packed = socket.inet_pton(socket.AF_INET6, address)
-            if PYVERSION == 2:
-                hexstring = ''.join(["%02x" % ord(x) for x in packed])
-            else:
-                hexstring = ''.join(["%02x" % x for x in packed])
+            hexstring = ''.join(["%02x" % x for x in packed])
             ptrowner = "%s%s" % \
                        ('.'.join([x for x in hexstring[::-1]]), v6_suffix)
         else:
@@ -134,10 +122,7 @@ def xor_string(a, b):
     """bitwise XOR bytes in a and b and return concatenated result"""
     result = b''
     for (x, y) in zip(a, b):
-        if PYVERSION == 2:
-            result += struct.pack('B', (ord(x) ^ ord(y)))
-        else:
-            result += struct.pack('B', (x ^ y))
+        result += struct.pack('B', (x ^ y))
     return result
 
 

@@ -10,8 +10,7 @@ from .tls import *
 
 def send_request_udp(pkt, host, port, family, itimeout, retries):
     """Send the request via UDP, with retries using exponential backoff"""
-    gotresponse = False
-    responsepkt, responder_addr = b"", ("", 0)
+    response, responder = b"", ("", 0)
     s = socket.socket(family, socket.SOCK_DGRAM)
     if options["srcip"]:
         s.bind((options["srcip"], 0))
@@ -23,17 +22,14 @@ def send_request_udp(pkt, host, port, family, itimeout, retries):
         s.settimeout(timeout)
         try:
             s.sendto(pkt, (host, port))
-            (responsepkt, responder_addr) = s.recvfrom(BUFSIZE)
-            gotresponse = True
+            (response, responder) = s.recvfrom(BUFSIZE)
+            break
         except socket.timeout:
             timeout = timeout * 2
             dprint("Request timed out with no answer")
-            pass
         retries -= 1
-        if gotresponse:
-            break
     s.close()
-    return (responsepkt, responder_addr)
+    return (response, responder)
 
 
 def send_request_tcp(pkt, host, port, family):
