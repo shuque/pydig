@@ -50,6 +50,7 @@ def decode_txt_rdata(rdata, rdlen):
         slen, = struct.unpack('B', rdata[position:position+1])
         s = rdata[position+1:position+1+slen]
         s = '"{}"'.format(s.replace(b'"', b'\\"').decode())
+        s = escape_string(s)
         txtstrings.append(s)
         position += 1 + slen
     return ' '.join(txtstrings)

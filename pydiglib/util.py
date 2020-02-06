@@ -31,6 +31,15 @@ def packed2int(input):
     return sum
 
 
+def escape_string(s):
+    """escape certain characters in given string"""
+    to_escape = '\r\n\t'
+    for c in to_escape:
+        ordinal = "\\{:03d}".format(ord(c))
+        s = s.replace(c, ordinal)
+    return s
+
+
 def randomize_case(input):
     """randomize case of input string; using the bit 0x20 hack to
     improve input entropy: see draft-vixie-dns-0x20-00"""
