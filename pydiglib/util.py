@@ -3,6 +3,9 @@ from .common import *
 from .windows import *
 
 
+string_printables = b'0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~ '
+
+
 class Struct:
     "Container class to emulate C struct or record."
     pass
@@ -31,13 +34,17 @@ def packed2int(input):
     return sum
 
 
-def escape_string(s):
-    """escape certain characters in given string"""
-    to_escape = '\r\n\t'
-    for c in to_escape:
-        ordinal = "\\{:03d}".format(ord(c))
-        s = s.replace(c, ordinal)
-    return s
+def bytes2escapedstring(b):
+    """escape certain characters in given bytestring; return string"""
+    out = b''
+    for c in b:
+        if c in string_printables:
+            out += c.to_bytes(1, 'big')
+        else:
+            out += "\{:03d}".format(c).encode('ascii')
+    out = out.replace(b'"', b'\\"')
+    outstring = out.decode(encoding='ascii', errors='backslashreplace')
+    return '"{}"'.format(outstring)
 
 
 def randomize_case(input):
