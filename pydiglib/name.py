@@ -29,11 +29,8 @@ class Name:
         for label in self.labels:
             result = ''
             for c in label:
-                if isinstance(c, int):
-                    c_int, c_chr = c, chr(c)
-                else:
-                    c_int, c_chr = ord(c), c.decode()
-                if c in ['.', '\\']:
+                c_chr = chr(c)
+                if c_chr in ['.', '\\']:
                     result += ("\\" + c_chr)
                 else:
                     result += c_chr
