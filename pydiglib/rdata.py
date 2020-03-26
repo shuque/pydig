@@ -49,7 +49,9 @@ def decode_txt_rdata(rdata, rdlen):
     while position < rdlen:
         slen, = struct.unpack('B', rdata[position:position+1])
         s = rdata[position+1:position+1+slen]
-        txtstrings.append(bytes2escapedstring(s))
+        txtstring = '"{}"'.format(
+            bytes2escapedstring(s, backslash_txt, printables_txt))
+        txtstrings.append(txtstring)
         position += 1 + slen
     return ' '.join(txtstrings)
 

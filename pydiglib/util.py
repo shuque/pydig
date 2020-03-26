@@ -3,7 +3,11 @@ from .common import *
 from .windows import *
 
 
-string_printables = b'0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~ '
+printables_txt = b'0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~ '
+backslash_txt = b'"'
+
+printables_label = b'0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~.'
+backslash_label = b'.\\'
 
 
 class Struct:
@@ -34,17 +38,18 @@ def packed2int(input):
     return sum
 
 
-def bytes2escapedstring(b):
+def bytes2escapedstring(indata, to_backslash, printables):
     """escape certain characters in given bytestring; return string"""
-    out = b''
-    for c in b:
-        if c in string_printables:
-            out += c.to_bytes(1, 'big')
+    out = ''
+    for c in indata:
+        c_chr = chr(c)
+        if c in to_backslash:
+            out += ("\\" + c_chr)
+        elif c in printables:
+            out += c_chr
         else:
-            out += "\{:03d}".format(c).encode('ascii')
-    out = out.replace(b'"', b'\\"')
-    outstring = out.decode(encoding='ascii', errors='backslashreplace')
-    return '"{}"'.format(outstring)
+            out += "\{:03d}".format(c)
+    return out
 
 
 def randomize_case(input):

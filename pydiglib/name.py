@@ -1,6 +1,6 @@
 import socket, struct, random, hashlib, binascii, string
 from .common import *
-
+from .util import *
 
 class Name:
 
@@ -27,13 +27,8 @@ class Name:
         result_list = []
 
         for label in self.labels:
-            result = ''
-            for c in label:
-                c_chr = chr(c)
-                if c_chr in ['.', '\\']:
-                    result += ("\\" + c_chr)
-                else:
-                    result += c_chr
+            result = bytes2escapedstring(label,
+                                         backslash_label, printables_label)
             result_list.append(result)
 
         if result_list == ['']:
