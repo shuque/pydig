@@ -1,4 +1,9 @@
-import socket, struct, time, string, base64, math
+import socket
+import struct
+import time
+import string
+import base64
+import math
 
 from .options import options
 from .common import *
@@ -6,6 +11,7 @@ from .dnsparam import *
 from .name import *
 from .edns import *
 from .util import *
+from .rr_svcb import RdataSVCB
 
 
 def print_optrr(rcode, rrclass, ttl, rdata):
@@ -294,7 +300,7 @@ def decode_nsec3_rdata(pkt, offset, rdlen):
 
 
 def decode_caa_rdata(rdata):
-    """decode CAAA rdata: TLSA rdata: flags(1), tag-length, tag, value;
+    """decode CAA rdata: TLSA rdata: flags(1), tag-length, tag, value;
        see RFC 6844"""
     flags, taglen = struct.unpack("BB", rdata[0:2])
     tag = rdata[2:2+taglen]
@@ -354,6 +360,8 @@ def decode_rr(pkt, offset, hexrdata):
         rdata = decode_tlsa_rdata(rdata)
     elif rrtype == 61:                                       # OPENPGPKEY
         rdata = decode_openpgpkey_rdata(rdata)
+    elif rrtype in [64, 65]:                                 # SVCB, HTTPS
+        rdata = RdataSVCB(pkt, offset, rdlen).__str__()
     elif rrtype == 257:                                      # CAA
         rdata = decode_caa_rdata(rdata)
     elif rrtype == 250:                                      # TSIG
