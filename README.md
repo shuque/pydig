@@ -20,11 +20,12 @@ specified with the TYPE123 and CLASS123 syntax.
 ## Usage
 
 ```
-	pydig [list of options] <qname> [<qtype>] [<qclass>]
-	pydig @server +walk <zone>
+$ pydig -h
+pydig (a DNS query tool written in Python), version 1.5.0
 
+Usage: pydig [list of options] <qname> [<qtype>] [<qclass>]
+       pydig @server +walk <zone>
 Options:
-
         -h                        print program usage information
         @server                   server to query
         -pNN                      use port NN (default is port 53)
@@ -32,38 +33,38 @@ Options:
         +tcp                      send query via TCP
         +ignore                   ignore truncation (don't retry with TCP)
         +aaonly                   set authoritative answer bit
-        +cdflag                   set checking disabled bit
         +adflag                   set authenticated data bit
+        +cdflag                   set checking disabled bit
         +norecurse                set rd bit to 0 (recursion not desired)
         +edns[=N]                 use EDNS with specified version (default 0)
         +ednsflags=N              set EDNS flags field to N
         +ednsopt=###[:value]      set generic EDNS option
         +bufsize=NN               use EDNS with specified UDP payload size
         +dnssec                   request DNSSEC RRs in response
+        +hex                      print hexdump of rdata field
         +nsid                     send NSID (Name Server ID) option
         +expire                   send an EDNS Expire option
         +cookie[=xxx]             send EDNS cookie option
         +subnet=addr              send EDNS client subnet option
-	+chainquery[=name]        send EDNS chain query	option
-	+padding[=N]              send EDNS padding option (def blocksize 128)
-        +hex                      print hexdump of rdata field
+        +chainquery[=name]        send EDNS chain query option
+        +padding[=N]              send EDNS padding option (defblocksize 128)
         +walk                     walk (enumerate) a DNSSEC secured zone
-	+0x20			  randomize case of query name (bit 0x20 hack)
-	+emptyquestion            send an empty question section
+        +0x20                     randomize case of query name (bit 0x20 hack)
+        +emptyquestion            send an empty question section
         +generic                  use RFC3597 generic type/class/rdata format
-	-4                        perform queries with IPv4
-        -6                        perform queries with IPv6
+        -4                        perform queries using IPv4
+        -6                        perform queries using IPv6
+        -x                        reverse lookup of IPv4/v6 address in qname
         -d                        request additional debugging output
-	-k/path/to/keyfile        use TSIG key in specified file
+        -k/path/to/keyfile        use TSIG key in specified file
         -iNNN                     use specified message id
-        -tNNN                     use this TSIG timestamp (secs since epoch)
         -y<alg>:<name>:<key>      use specified TSIG alg, name, key
         +tls=auth|noauth          use TLS with|without authentication
         +tls_port=N               use N as the TLS port (default is 853)
         +tls_fallback             Fallback from TLS to TCP on TLS failure
         +tls_hostname=name        Check hostname in TLS server certificate
         +https[=url]              use HTTPS transport with optional URL
-```
+``
 
 IXFR (Incremental Zone Transfer) queries are supported with the syntax
 of "IXFR=NNNN" for the <qtype>, where NNNN is the zone serial number.
