@@ -1,7 +1,6 @@
+.gitignore
 *~
 *.pyc
-*.pyo
-*.so
 archive/
 build/
 sdist/
