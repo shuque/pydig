@@ -374,30 +374,3 @@ def decode_rr(pkt, offset, hexrdata):
     offset += rdlen
     return (domainname, rrtype, rrclass, ttl, rdata, offset)
 
-
-def decode_nsec_rr(pkt, offset):
-    """ Decode an NSEC resource record; used by zonewalk() routine"""
-    
-    domainname, offset = name_from_wire_message(pkt, offset)
-    rrtype, rrclass, ttl, rdlen = \
-            struct.unpack("!HHIH", pkt[offset:offset+10])
-    if rrtype != 47:
-        raise ErrorMessage("encountered RR type %s, expecting NSEC" % rrtype)
-    
-    offset += 10
-    rdata = pkt[offset:offset+rdlen]
-
-    end_rdata = offset + rdlen
-    d, offset = name_from_wire_message(pkt, offset)
-    nextrr = d
-    type_bitmap = pkt[offset:end_rdata]
-    p = type_bitmap
-    rrtypelist = []
-    while p:
-        windownum, winlen = struct.unpack('BB', p[0:2])
-        bitmap = p[2:2+winlen]
-        rrtypelist += decode_typebitmap(windownum, bitmap)
-        p = p[2+winlen:]
-    offset += rdlen
-    return (domainname, rrtype, rrclass, ttl, nextrr, rrtypelist, offset)
-
