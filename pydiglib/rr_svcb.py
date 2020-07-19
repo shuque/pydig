@@ -28,19 +28,18 @@ class RdataSVCB:
     def __init__(self, pkt, offset, rdlen):
         self.pkt = pkt
         self.offset = offset
-        self.rdlen = rdlen
+        self.end_rdata = offset + rdlen
+        self.rdata = pkt[offset:self.end_rdata]
         self.priority = None
         self.targetname = None
         self.params = []                            # list(key=value strings)
         self.decode()
 
     def decode(self):
-        self.priority, = struct.unpack("!H",
-                                       self.pkt[self.offset:self.offset+2])
-
+        self.priority, = struct.unpack("!H", self.rdata[:2])
         d, self.offset = name_from_wire_message(self.pkt, self.offset+2)
         self.targetname = d.text()
-        self.decode_params(self.pkt[self.offset:])
+        self.decode_params(self.pkt[self.offset:self.end_rdata])
 
     def decode_params(self, params_wire):
         lastkey = None
