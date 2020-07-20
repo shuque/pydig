@@ -1,6 +1,17 @@
-import socket, struct, random, hashlib, binascii
-from .common import *
-from .windows import *
+"""
+Misc utility functions.
+
+"""
+
+import os
+import socket
+import struct
+import random
+import hashlib
+import binascii
+
+from .common import RESOLV_CONF, ErrorMessage
+from .windows import get_windows_default_dns
 
 
 printables_txt = b'0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~ '
@@ -48,7 +59,7 @@ def bytes2escapedstring(indata, to_backslash, printables):
         elif c in printables:
             out += c_chr
         else:
-            out += "\{:03d}".format(c)
+            out += r"\{:03d}".format(c)
     return out
 
 
@@ -59,7 +70,7 @@ def randomize_case(input):
     random.seed()
     for c in input:
         if c.isalpha():
-            if random.choice([0,1]):
+            if random.choice([0, 1]):
                 outlist.append(chr((ord(c) ^ 0x20)))
                 continue
         outlist.append(c)
@@ -87,7 +98,7 @@ def ip2ptr(address):
         error = True
     if error:
         raise ErrorMessage("%s isn't an IPv4 or IPv6 address" % address)
-    
+
     return ptrowner
 
 
@@ -104,7 +115,7 @@ def get_socketparams(server, port, af, type):
     """Only the first set of parameters is used. Passing af=AF_UNSPEC prefers
     IPv6 if possible."""
     ai = socket.getaddrinfo(server, port, af, type)[0]
-    family, socktype, proto, canonname, sockaddr = ai
+    family, socktype, _, _, sockaddr = ai
     server_addr, port = sockaddr[0:2]
     return (server_addr, port, family, socktype)
 
@@ -113,7 +124,7 @@ def sendSocket(s, message):
     """Send message on a connected socket"""
     try:
         octetsSent = 0
-        while (octetsSent < len(message)):
+        while octetsSent < len(message):
             sentn = s.send(message[octetsSent:])
             if sentn == 0:
                 raise ErrorMessage("send() returned 0 bytes")
@@ -129,7 +140,7 @@ def recvSocket(s, numOctets):
     """Read and return numOctets of data from a connected socket"""
     response = b""
     octetsRead = 0
-    while (octetsRead < numOctets):
+    while octetsRead < numOctets:
         chunk = s.recv(numOctets-octetsRead)
         chunklen = len(chunk)
         if chunklen == 0:
@@ -164,15 +175,14 @@ def hmac(key, data, func):
 
     return m.digest()
 
-                                
+
 def get_default_server():
     """get default DNS resolver address"""
     if os.name != 'nt':
         for line in open(RESOLV_CONF):
             if line.startswith("nameserver"):
                 return line.split()[1]
-        else:
-            raise ErrorMessage("No default server in %s" % RESOLV_CONF)
+        raise ErrorMessage("No default server in %s" % RESOLV_CONF)
     else:
         s = get_windows_default_dns()
         if not s:

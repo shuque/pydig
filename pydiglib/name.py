@@ -1,6 +1,13 @@
-import socket, struct, random, hashlib, binascii, string
-from .common import *
-from .util import *
+"""
+Class to represent a domain name.
+
+"""
+
+import struct
+
+from .common import ErrorMessage, Stats
+from .util import bytes2escapedstring, backslash_label, printables_label
+
 
 class Name:
 
@@ -8,10 +15,8 @@ class Name:
 
     labels = None
 
-    def __init__(self, labels, text=None):
+    def __init__(self, labels):
         self.labels = labels
-        if text:
-            self.text = text
 
     def wire(self, canonical_form=False):
         """Return uncompressed wire format of domain name."""
@@ -22,7 +27,7 @@ class Name:
             wire += struct.pack('B', len(label)) + label
         return wire
 
-    def text(self, escape=True):
+    def text(self):
         """Return textual representation of domain name."""
         result_list = []
 
@@ -33,22 +38,21 @@ class Name:
 
         if result_list == ['']:
             return "."
-        else:
-            return ".".join(result_list)
+        return ".".join(result_list)
 
     def __repr__(self):
         return "<Name: {}>".format(self.text())
 
 
-def name_from_text(input):
+def name_from_text(inputstring):
     """
     Return a Name() object corresponding to textual domain name.
     """
     labellist = []
-    if input == ".":
+    if inputstring == ".":
         labellist = [b'']
     else:
-        for label in input.split('.'):
+        for label in inputstring.split('.'):
             label = label.encode('ascii')
             labellist.append(label)
     return Name(labellist)
@@ -66,7 +70,7 @@ def name_from_wire_message(msg, offset):
 def get_name_labels(msg, offset, c_offset_list):
 
     """
-    Decode domain name at given packet offset. c_offset_list is a list 
+    Decode domain name at given packet offset. c_offset_list is a list
     of compression offsets seen so far. Returns list of domain name labels.
     """
 
@@ -80,7 +84,7 @@ def get_name_labels(msg, offset, c_offset_list):
             if c_offset in c_offset_list:
                 raise ErrorMessage("Found compression pointer loop.")
             c_offset_list.append(c_offset)
-            offset +=2
+            offset += 2
             rightmostlabels, _ = get_name_labels(msg, c_offset, c_offset_list)
             labellist += rightmostlabels
             Done = True
@@ -100,12 +104,9 @@ def name_match(n1, n2, case_sensitive=False):
         return False
     for x, y in zip(n1.labels, n2.labels):
         if case_sensitive:
-            if (x != y):
+            if x != y:
                 return False
         else:
-            if (x.lower() != y.lower()):
+            if x.lower() != y.lower():
                 return False
-    else:
-        return True
-
-
+    return True

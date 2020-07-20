@@ -1,8 +1,17 @@
-import hashlib, time, base64
-from .common import *
-from .util import *
-from .dnsparam import *
-from .name import *
+"""
+TSIG authentication.
+
+"""
+
+import hashlib
+import time
+import base64
+import struct
+
+from .common import ErrorMessage, dprint
+from .util import Struct, hmac, packed2int
+from .dnsparam import qt, qc, rc
+from .name import name_from_text, name_from_wire_message, name_match
 
 
 # TSIG algorithms: see RFC 2845 (hmac-md5), 3645 (gss-tsig), 4635 (hmac-sha*)
@@ -34,13 +43,15 @@ def read_tsig_params(filename):
     tsig_name = line_parts[0]
     tsig_key = ''.join(line_parts[6:])
     dprint("read tsigkey %s %s" % (tsig_name, tsig_key))
-    tsig_key = base64.decodestring(tsig_key)
+    tsig_key = base64.b64decode(tsig_key)
     return (tsig_name, tsig_key)
 
 
 def mk_tsig_sigtime(sigtime):
-    """make 48-bit TSIG signature time field; see RFC 2845"""
-    """this will need to be updated before Jan 19th 2038 :-)"""
+    """
+    Make 48-bit TSIG signature time field; see RFC 2845. This will need to be
+    updated before Jan 19th 2038 :-)
+    """
     return b'\x00\x00' + struct.pack('!I', sigtime)  # 48-bits
 
 
@@ -69,9 +80,10 @@ class Tsig:
         self.verify_failure = 0
 
     def setkey(self, name, key, algorithm="hmac-md5"):
+        """Set TSIG key"""
         self.keyname = name_from_text(name)
         self.key = key
-        if algorithm == None:
+        if algorithm is None:
             raise ErrorMessage("unsupported TSIG algorithm %s" % algorithm)
         self.algorithm, self.function = dns_tsig_alg.get(algorithm)
         self.algorithm_len = dns_tsig_alg_len.get(algorithm)
@@ -114,7 +126,7 @@ class Tsig:
         self.request.tsig = (tsig_name + tsig_type + tsig_class + tsig_ttl +
                              rdlen + rdata)
         return self.request.tsig
-    
+
     def decode_tsig_rdata(self, pkt, offset, rdlen, tsig_name, tsig_offset):
         """decode TSIG rdata: alg, sigtime, fudge, mac_size, mac, origid,
         error, otherlen; see RFC 2845"""
@@ -149,7 +161,7 @@ class Tsig:
                   rc.get_name(self.response.error),
                   self.response.otherlen)
         if self.response.otherlen != 0:          # only for BADTIME ercode
-            self.response.otherdata = pkt[offset:offset+otherlen]
+            self.response.otherdata = pkt[offset:offset+self.response.otherlen]
             result += str(self.response.otherdata)
         else:
             self.response.otherdata = b""
@@ -161,7 +173,7 @@ class Tsig:
         Reconstruct packet before TSIG record was added, and with origid;
         add TSIG variables, and request MAC; compute digest and compare it
         with received digest."""
-    
+
         if not name_match(self.response.tsig_name, self.keyname):
             raise ErrorMessage("encountered unknown TSIG key name: %s" %
                                self.response.tsig_name)
@@ -183,13 +195,13 @@ class Tsig:
         tsig_error = struct.pack('!H', self.response.error)
         tsig_otherlen = struct.pack('!H', self.response.otherlen)
         tsig_otherdata = self.response.otherdata
-        tsig_vars = (tsig_name + tsig_class + tsig_ttl + tsig_alg + 
+        tsig_vars = (tsig_name + tsig_class + tsig_ttl + tsig_alg +
                      tsig_sigtime + tsig_fudge + tsig_error +
                      tsig_otherlen + tsig_otherdata)
 
         if self.prior_digest:
             input_data = (struct.pack('!H', len(self.prior_digest)) +
-                          self.prior_digest + 
+                          self.prior_digest +
                           dns_message + tsig_sigtime + tsig_fudge)
         else:
             input_data = (request_mac + dns_message + tsig_vars)
@@ -205,5 +217,3 @@ class Tsig:
 
         self.prior_digest = self.response.mac          # for AXFR
         return
-
-

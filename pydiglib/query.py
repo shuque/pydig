@@ -1,11 +1,18 @@
-import os, sys, errno, socket, select, struct, random, math
+"""
+Query routines.
 
-from .options import options
-from .util import *
-from .common import *
-from .dnsparam import *
-from .dnsmsg import *
-from .tls import *
+"""
+
+import socket
+import select
+import struct
+import ssl
+
+from .util import sendSocket, recvSocket, is_multicast
+from .common import options, ErrorMessage, dprint, TIMEOUT_MAX, Counter, BUFSIZE
+from .dnsparam import rc
+from .dnsmsg import DNSresponse
+from .tls import get_ssl_context, get_ssl_connection
 
 
 def send_request_udp(pkt, host, port, family, itimeout, retries):
@@ -18,7 +25,7 @@ def send_request_udp(pkt, host, port, family, itimeout, retries):
             s.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, \
                          socket.inet_aton(options["srcip"]))
     timeout = itimeout
-    while (retries > 0):
+    while retries > 0:
         s.settimeout(timeout)
         try:
             s.sendto(pkt, (host, port))
@@ -33,31 +40,6 @@ def send_request_udp(pkt, host, port, family, itimeout, retries):
 
 
 def send_request_tcp(pkt, host, port, family):
-    """Send the request packet via TCP"""
-
-    pkt = struct.pack("!H", len(pkt)) + pkt       # prepend 2-byte length
-    s = socket.socket(family, socket.SOCK_STREAM)
-    s.settimeout(TIMEOUT_MAX)
-    if options["srcip"]:
-        s.bind((options["srcip"], 0))
-    response = b""
-    try:
-        s.connect((host, port))
-        if not sendSocket(s, pkt):
-            raise ErrorMessage("send() on socket failed.")
-        lbytes = recvSocket(s, 2)
-        if (len(lbytes) != 2):
-            raise ErrorMessage("recv() on socket failed.")
-        resp_len, = struct.unpack('!H', lbytes)
-        response = recvSocket(s, resp_len)
-    except socket.error as e:
-        s.close()
-        raise ErrorMessage("tcp socket error: %s" % e)
-    s.close()
-    return response
-
-
-def send_request_tcp2(pkt, host, port, family):
     """Send the request packet via TCP, using select"""
 
     pkt = struct.pack("!H", len(pkt)) + pkt       # prepend 2-byte length
@@ -78,15 +60,12 @@ def send_request_tcp2(pkt, host, port, family):
 
     while True:
         try:
-            (ready_r, ready_w, ready_e) = select.select([s], [], [])
+            ready_r, _, _ = select.select([s], [], [])
         except select.error as e:
-            if e[0] == errno.EINTR:
-                continue
-            else:
-                raise ErrorMessage("fatal error from select(): %s" % e)
+            raise ErrorMessage("fatal error from select(): %s" % e)
         if ready_r and (s in ready_r):
             lbytes = recvSocket(s, 2)
-            if (len(lbytes) != 2):
+            if len(lbytes) != 2:
                 raise ErrorMessage("recv() on socket failed.")
             resp_len, = struct.unpack('!H', lbytes)
             response = recvSocket(s, resp_len)
@@ -119,7 +98,7 @@ def send_request_tls(pkt, host, port, family, hostname=None):
         if not sendSocket(conn, pkt):
             raise ErrorMessage("send() on socket failed.")
         lbytes = recvSocket(conn, 2)
-        if (len(lbytes) != 2):
+        if len(lbytes) != 2:
             raise ErrorMessage("recv() on socket failed.")
         resp_len, = struct.unpack('!H', lbytes)
         response = recvSocket(conn, resp_len)
@@ -145,7 +124,7 @@ def do_axfr(query, pkt, host, port, family):
             lbytes = recvSocket(s, 2)
             if not lbytes:
                 break
-            elif (len(lbytes) != 2):
+            elif len(lbytes) != 2:
                 raise ErrorMessage("recv() on socket failed.")
             msg_len, = struct.unpack('!H', lbytes)
             msg = recvSocket(s, msg_len)
@@ -173,4 +152,3 @@ def do_axfr(query, pkt, host, port, family):
               (tsig.tsig_total, tsig.verify_success, tsig.verify_failure))
 
     return
-

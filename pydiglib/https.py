@@ -1,19 +1,25 @@
-from .common import *
-from .util import *
+"""
+DNS over HTTPS.
+
+"""
+
+from .common import options
 
 try:
     import requests
-except:
+except ImportError:
     pass
 else:
 
     options["have_https"] = True
 
-    HTTPS_TIMEOUT=5
+    HTTPS_TIMEOUT = 5
 
     def checkContentLength(r):
-        # requests library doesn't check content length!
-        # https://blog.petrzemek.net/2018/04/22/on-incomplete-http-reads-and-the-requests-library-in-python/
+        """
+        requests library doesn't check content length!
+        https://blog.petrzemek.net/2018/04/22/on-incomplete-http-reads-and-the-requests-library-in-python/
+        """
         expected = r.headers.get('Content-Length')
         if expected is not None:
             actual = r.raw.tell()

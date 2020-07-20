@@ -1,18 +1,26 @@
-import socket, struct, time, string, base64, math
+"""
+dnsmsg.py - dns message parsing routines
+
+"""
+
+import socket
+import struct
+import math
+import random
 
 from .options import options
-from .common import *
-from .dnsparam import *
-from .name import *
-from .rdata import *
-from .edns import *
-from .util import *
+from .common import ErrorMessage
+from .rdata import decode_rr, print_optrr
+from .name import name_from_wire_message, name_from_text, name_match
+from .dnsparam import qt, qc, rc
+from .edns import OptRR
+from .util import randomize_case
 
 
 class DNSquery:
     """DNS Query class"""
 
-    def __init__(self, qname, qtype, qclass, minimize=False):
+    def __init__(self, qname, qtype, qclass):
         if options["do_0x20"]:
             self.qname = randomize_case(qname)
             self.orig_qname = self.qname
@@ -46,18 +54,22 @@ class DNSquery:
         self.msglen = len(self.message)
 
     def get_message(self):
+        """return wire format DNS query message"""
         return self.message
 
     def get_length(self):
+        """Return length of wire format query message"""
         return self.msglen
 
     def set_txid(self):
+        """return transaction ID"""
         if options["msgid"]:
             self.txid = options["msgid"]
         else:
             self.txid = random.randint(1, 65535)
 
     def set_flags(self):
+        """Set DNS header flags"""
         self.qr = 0
         self.opcode = 0
         self.aa = options["aa"]
@@ -70,6 +82,7 @@ class DNSquery:
         self.rcode = 0
 
     def set_section_counts(self):
+        """Set section counts"""
         if options["emptyquestion"]:
             self.qdcount = 0
         else:
@@ -79,6 +92,7 @@ class DNSquery:
         self.arcount = 0
 
     def mk_header_fields(self):
+        """Construct wire format message header fields"""
         self.packed_txid = struct.pack('!H', self.txid)
         flags = (self.qr << 15) + \
                 (self.opcode << 11) + \
@@ -97,6 +111,7 @@ class DNSquery:
         self.packed_arcount = struct.pack('!H', self.arcount)
 
     def mk_question(self):
+        """Construct wire question section"""
         if options["emptyquestion"]:
             self.question = b""
         else:
@@ -105,6 +120,7 @@ class DNSquery:
                 struct.pack('!H', self.qclass)
 
     def mk_additional(self):
+        """Construct wire format additional section"""
         Opt = OptRR(options["edns_version"],
                     options["bufsize"],
                     flags=options["edns_flags"],
@@ -113,6 +129,7 @@ class DNSquery:
         self.additional = Opt.mk_optrr(msglen=self.msglen_without_opt)
 
     def assemble_message(self):
+        """Create assembled wire format query message"""
         self.message = self.packed_txid + \
                        self.flags + \
                        self.packed_qdcount + \
@@ -124,6 +141,7 @@ class DNSquery:
                        self.additional
 
     def add_soa(self, serial):
+        """Add SOA RRset to Authority section (for IXFR queries)"""
         self.rd = 0
         self.nscount += 1
         self.packed_nscount = struct.pack('!H', self.nscount)
@@ -143,6 +161,7 @@ class DNSquery:
                          rdlen + rdata
 
     def add_tsig(self):
+        """Add TSIG RR to additional section"""
         self.tsig_rr = self.tsig.mk_request_tsig(self.txid, self.message)
         self.arcount += 1
         self.packed_arcount = struct.pack('!H', self.arcount)
@@ -156,7 +175,7 @@ class DNSresponse:
     """DNS Response class"""
 
     cnt_compression = 0
-    sections = [ "QUESTION", "ANSWER", "AUTHORITY", "ADDITIONAL" ]
+    sections = ["QUESTION", "ANSWER", "AUTHORITY", "ADDITIONAL"]
     print_section_bitmap = 0b1111           # default: print all sections
 
     def __init__(self, family, query, msg, used_tcp=False, checkid=True):
@@ -173,7 +192,7 @@ class DNSresponse:
             self.arcount = struct.unpack('!HHHHHH', self.message[:12])
         if checkid and (self.txid != self.query.txid):
             # Should continue listening for a valid response here (ideally)
-            raise ErrorMessage("got response with id: %ld (expecting %ld)" % 
+            raise ErrorMessage("got response with id: %ld (expecting %ld)" %
                                (self.txid, self.query.txid))
         self.qr = flags >> 15
         self.opcode = (flags >> 11) & 0xf
@@ -181,13 +200,13 @@ class DNSresponse:
         self.tc = (flags >> 9) & 0x1
         self.rd = (flags >> 8) & 0x1
         self.ra = (flags >> 7) & 0x1
-        self.z  = (flags >> 6) & 0x1
+        self.z = (flags >> 6) & 0x1
         self.ad = (flags >> 5) & 0x1
         self.cd = (flags >> 4) & 0x1
         self.rcode = (flags) & 0xf
 
     def print_ampratio(self):
-        """Print packet amplification ratios"""
+        """Print packet amplification ratios - these are estimations"""
         if self.family == socket.AF_INET:
             overhead = 42                # Ethernet + IPv4 + UDP header
         elif self.family == socket.AF_INET6:
@@ -205,7 +224,7 @@ class DNSresponse:
 
         print(";; Size query=%d, response=%d, amp1=%.2f amp2=%.2f" %
               (self.query.msglen, self.msglen, amp1, amp2))
-    
+
     def print_preamble(self):
         """Print preamble of a DNS response message"""
         if options["do_0x20"]:
@@ -227,29 +246,11 @@ class DNSresponse:
         self.print_ampratio()
 
     def print_rr(self, rrname, ttl, rrtype, rrclass, rdata):
+        """Print RR in presentation format"""
         print("%s\t%d\t%s\t%s\t%s" %
               (rrname.text(), ttl,
                qc.get_name(rrclass), qt.get_name(rrtype), rdata))
         return
-
-    def print_rrs(offset, section_num, section_name, rrcount):
-        for i in range(rrcount):
-            if section_num == 0:            # Question
-                rrname, rrtype, rrclass, offset = \
-                        self.decode_question(offset)
-                answer_qname = rrname.text()
-                if self.query.qtype != 252:
-                    print("%s\t%s\t%s" % (answer_qname,
-                                          qc.get_name(rrclass),
-                                          qt.get_name(rrtype)))
-            else:
-                rrname, rrtype, rrclass, ttl, rdata, offset = \
-                    decode_rr(self.pkt, offset, options["hexrdata"])
-                print("%s\t%d\t%s\t%s\t%s" %
-                      (rrname.text(), ttl,
-                       qc.get_name(rrclass), qt.get_name(rrtype), rdata))
-
-        return offset
 
     def decode_question(self, offset):
         """decode question section of a DNS message"""
@@ -259,6 +260,7 @@ class DNSresponse:
         return (domainname, rrtype, rrclass, offset)
 
     def question_matched(self, qname, qtype, qclass):
+        """Check that answer matches question"""
         if self.rcode in [0, 3]:
             if (not name_match(qname, self.query.qname, options["do_0x20"])) \
                 or (qtype != self.query.qtype) \
@@ -267,29 +269,30 @@ class DNSresponse:
         return
 
     def decode_sections(self, is_axfr=False):
+        """Decode message sections and print contents"""
         offset = 12                     # skip over DNS header
         answer_qname = None
 
-        for (secname, rrcount) in zip(self.sections, 
-                     [self.qdcount, self.ancount, self.nscount, self.arcount]):
+        for (secname, rrcount) in zip(self.sections,
+                                      [self.qdcount, self.ancount, self.nscount, self.arcount]):
             if rrcount and (not is_axfr):
                 print("\n;; %s SECTION:" % secname)
             if secname == "QUESTION":
-                for i in range(rrcount):
+                for _ in range(rrcount):
                     rrname, rrtype, rrclass, offset = \
                             self.decode_question(offset)
                     answer_qname = rrname
-                    if (is_axfr):
+                    if is_axfr:
                         continue
                     print("%s\t%s\t%s" % (answer_qname.text(),
-                                          qc.get_name(rrclass), 
+                                          qc.get_name(rrclass),
                                           qt.get_name(rrtype)))
                     self.question_matched(answer_qname, rrtype, rrclass)
             else:
-                for i in range(rrcount):
+                for _ in range(rrcount):
                     rrname, rrtype, rrclass, ttl, rdata, offset = \
                             decode_rr(self.message, offset, options["hexrdata"])
-                    if (is_axfr and (secname != "ANSWER")):
+                    if is_axfr and (secname != "ANSWER"):
                         continue
                     elif rrtype == 41:
                         print_optrr(self.rcode, rrclass, ttl, rdata)
@@ -303,5 +306,4 @@ class DNSresponse:
 
     def __repr__(self):
         return "<DNSresponse: {},{},{}>".format(
-            self.qname, self.qtype, self.qclass)
-
+            self.query.qname, self.query.qtype, self.query.qclass)

@@ -1,5 +1,7 @@
 
-import os, sys, socket
+import os
+import sys
+import socket
 
 PROGNAME       = os.path.basename(sys.argv[0])
 PROGDESC       = "a DNS query tool written in Python"
@@ -149,7 +151,7 @@ options = dict(
     nsid=False,
     expire=False,
     cookie=False,
-    subnet=False,
+    subnet=None,
     chainquery=False,
     padding=False,
     padding_blocksize=None,

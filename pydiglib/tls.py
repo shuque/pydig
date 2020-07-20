@@ -1,6 +1,9 @@
-import ssl, socket, struct
+"""
+TLS stuff.
 
-from .util import *
+"""
+
+import ssl
 
 
 def get_ssl_context(tls_auth, hostname):
@@ -37,6 +40,4 @@ def get_ssl_connection(ctx, s, hostname):
     """Return SSL/TLS connection object"""
     if ctx:
         return ctx.wrap_socket(s, server_hostname=hostname)
-    else:
-        return ssl.wrap_socket(s)
-
+    return ssl.wrap_socket(s)

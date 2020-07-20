@@ -1,13 +1,20 @@
-import os, sys, socket, time
+"""
+main function.
 
-from .common import *
-from .options import options, parse_args
-from .util import *
-from .dnsparam import *
-from .dnsmsg import *
-from .query import *
+"""
+
+import sys
+import socket
+import time
+
+from .common import options, excepthook, dprint, Stats, ErrorMessage, UsageError, ITIMEOUT, RETRIES
+from .options import parse_args
+from .util import random_init, get_socketparams, is_multicast
+from .dnsparam import qc, qt
+from .dnsmsg import DNSquery, DNSresponse
+from .query import send_request_udp, send_request_tcp, send_request_tls, do_axfr
+from .https import send_request_https
 from .walk import zonewalk
-from .https import *
 
 
 def main(args):
@@ -30,14 +37,14 @@ def main(args):
         raise UsageError("ERROR: invalid query class: {}\n".format(qclass))
 
     query = DNSquery(qname, qtype_val, qclass_val)
-        
+
     try:
-        server_addr, port, family, socktype = \
+        server_addr, port, family, _ = \
                      get_socketparams(options["server"], options["port"],
                                       options["af"], socket.SOCK_DGRAM)
     except socket.gaierror as e:
         raise ErrorMessage("bad server: %s (%s)" % (options["server"], e))
-        
+
     if options["do_zonewalk"]:
         zonewalk(server_addr, port, family, qname, options)
         sys.exit(0)
@@ -45,7 +52,7 @@ def main(args):
     request = query.get_message()
 
     if (qtype == "AXFR") or (qtype == "IXFR" and options["use_tcp"]):
-        responses = do_axfr(query, request, server_addr, port, family)
+        do_axfr(query, request, server_addr, port, family)
         sys.exit(0)
 
     # the rest is for non AXFR queries ..
@@ -101,16 +108,16 @@ def main(args):
 
     if options["use_tcp"] or (response and response.tc) \
        or (options["tls"] and options["tls_fallback"] and not response):
-        if (response and response.tc):
+        if response and response.tc:
             if options["ignore"]:
                 print(";; UDP Response was truncated.")
             else:
                 print(";; UDP Response was truncated. Retrying using TCP ...")
-        if (options["tls"] and options["tls_fallback"] and not response):
+        if options["tls"] and options["tls_fallback"] and not response:
             print(";; TLS fallback to TCP ...")
         if not options["ignore"]:
             t1 = time.time()
-            responsepkt = send_request_tcp2(request, server_addr, port, family)
+            responsepkt = send_request_tcp(request, server_addr, port, family)
             t2 = time.time()
             response = DNSresponse(family, query, responsepkt)
             print(";; TCP response from %s, %d bytes, in %.3f sec" %

@@ -1,16 +1,17 @@
+"""
+rdata parsing.
+
+"""
+
 import socket
 import struct
 import time
-import string
 import base64
-import math
 
-from .options import options
-from .common import *
-from .dnsparam import *
-from .name import *
-from .edns import *
-from .util import *
+from .common import options
+from .dnsparam import qt, rc, edns_opt, sshfp_alg, sshfp_fptype, dnssec_proto, dnssec_alg, dnssec_digest
+from .name import name_from_wire_message
+from .util import hexdump, bytes2escapedstring, backslash_txt, printables_txt, packed2int
 from .rr_svcb import RdataSVCB
 
 
@@ -20,7 +21,8 @@ def print_optrr(rcode, rrclass, ttl, rdata):
     ercode_hi, version, z = struct.unpack('!BBH', packed_ttl)
     ercode = (ercode_hi << 4) | rcode
     flags = []
-    if z & 0x8000: flags.append("do")                  # DNSSEC OK bit
+    if z & 0x8000:
+        flags.append("do")                  # DNSSEC OK bit
     print(";; OPT: edns_version=%d, udp_payload=%d, flags=%s, ercode=%d(%s)" %
           (version, rrclass, ' '.join(flags), ercode, rc.get_name(ercode)))
     blob = rdata
@@ -44,9 +46,9 @@ def print_optrr(rcode, rrclass, ttl, rdata):
 
 def generic_rdata_encoding(rdata, rdlen):
     """return generic encoding of rdata for unknown types; see RFC 3597"""
-    return "\# %d %s" % (rdlen, hexdump(rdata))
+    return r"\# %d %s" % (rdlen, hexdump(rdata))
 
-    
+
 def decode_txt_rdata(rdata, rdlen):
     """decode TXT RR rdata into a string of quoted text strings,
     escaping any embedded double quotes"""
@@ -72,7 +74,7 @@ def decode_soa_rdata(pkt, offset, rdlen):
             struct.unpack("!IiiiI", pkt[offset:offset+20])
     return "%s %s %d %d %d %d %d" % \
            (mname, rname, serial, refresh, retry, expire, min)
-    
+
 
 def decode_srv_rdata(pkt, offset):
     """decode SRV rdata: priority (2), weight (2), port, target; RFC 2782"""
@@ -152,15 +154,16 @@ def decode_dnskey_rdata(pkt, offset, rdlen):
     flags, proto, alg = struct.unpack('!HBB', pkt[offset:offset+4])
     pubkey = pkt[offset+4:offset+rdlen]
     if options['DEBUG']:
-        zonekey = (flags >> 8) & 0x1;         # bit 7
-        sepkey = flags & 0x1;                 # bit 15
+        zonekey = (flags >> 8) & 0x1          # bit 7
+        sepkey = flags & 0x1                  # bit 15
         keytype = None
         if proto == 3:
             if zonekey and sepkey:
-                keytype="KSK"
+                keytype = "KSK"
             elif zonekey:
-                keytype="ZSK"
-        if keytype: comments = "%s, " % keytype
+                keytype = "ZSK"
+        if keytype:
+            comments = "%s, " % keytype
         comments += "proto=%s, alg=%s" % \
                    (dnssec_proto[proto], dnssec_alg[alg])
         if alg in [5, 7, 8, 10]:              # RSA algorithms
@@ -253,13 +256,13 @@ def decode_nsec_rdata(pkt, offset, rdlen):
     return "%s %s" % (nextrr, ' '.join(rrtypelist))
 
 
-def decode_nsec3param_rdata(pkt, offset, rdlen):
+def decode_nsec3param_rdata(rdata):
     """decode NSEC3PARAM rdata: hash, flags, iterations, salt len, salt;
     see RFC 5155 Section 4.2"""
-    
+
     hashalg, flags, iterations, saltlen = struct.unpack('!BBHB',
-                                                        pkt[offset:offset+5])
-    salt = hexdump(pkt[offset+5:offset+5+saltlen])
+                                                        rdata[:5])
+    salt = hexdump(rdata[5:5+saltlen])
     result = "%d %d %d %s" % (hashalg, flags, iterations, salt)
     return result
 
@@ -355,7 +358,7 @@ def decode_rr(pkt, offset, hexrdata):
     elif rrtype == 50:                                       # NSEC3
         rdata = decode_nsec3_rdata(pkt, offset, rdlen)
     elif rrtype == 51:                                       # NSEC3PARAM
-        rdata = decode_nsec3param_rdata(pkt, offset, rdlen)
+        rdata = decode_nsec3param_rdata(rdata)
     elif rrtype in [52, 53]:                                 # TLSA, SMIMEA
         rdata = decode_tlsa_rdata(rdata)
     elif rrtype == 61:                                       # OPENPGPKEY
@@ -373,4 +376,3 @@ def decode_rr(pkt, offset, hexrdata):
         rdata = generic_rdata_encoding(rdata, rdlen)
     offset += rdlen
     return (domainname, rrtype, rrclass, ttl, rdata, offset)
-

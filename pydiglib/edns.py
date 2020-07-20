@@ -1,10 +1,18 @@
-import socket, struct, base64, math
+"""
+EDNS options
+
+"""
+
+import os
+import socket
+import struct
+import math
 
 from .options import options
-from .common import *
-from .dnsparam import *
-from .name import *
-from .util import *
+from .common import ErrorMessage, EDNS0_UDPSIZE, PAD_BLOCK_SIZE
+from .dnsparam import qt
+from .name import name_from_text
+from .util import h2bin
 
 
 class OptRR:
@@ -75,7 +83,7 @@ class OptRR:
     def mk_cookie(self):
         """Construct EDNS cookie option"""
         optcode = struct.pack('!H', 10)
-        if options["cookie"] == True:
+        if options["cookie"] is True:
             optdata = os.urandom(8)
             optlen = struct.pack('!H', 8)
         else:
@@ -89,7 +97,7 @@ class OptRR:
     def mk_chainquery(self):
         """Construct EDNS chain query option"""
         optcode = struct.pack('!H', 13)
-        if options["chainquery"] == True:
+        if options["chainquery"] is True:
             optdata = b'\x00'
         else:
             optdata = name_from_text(options["chainquery"]).wire()
@@ -115,20 +123,20 @@ class OptRR:
         if remainder == 0:
             print(";; Query Padding size: 0")
             return b''
-        else:
-            msgsize += 4     # account for 4 bytes of opt code + length
-            remainder = msgsize % self.pad_blocksize
-            optcode = struct.pack('!H', 12)
-            padlen = self.pad_blocksize - remainder
-            optdata = b'\x00' * padlen
-            optlen = struct.pack('!H', len(optdata))
-            print(";; Query Padding size: {}, Block size: {}".format(
-                padlen+4, self.pad_blocksize))
-            return optcode + optlen + optdata
+
+        msgsize += 4     # account for 4 bytes of opt code + length
+        remainder = msgsize % self.pad_blocksize
+        optcode = struct.pack('!H', 12)
+        padlen = self.pad_blocksize - remainder
+        optdata = b'\x00' * padlen
+        optlen = struct.pack('!H', len(optdata))
+        print(";; Query Padding size: {}, Block size: {}".format(
+            padlen+4, self.pad_blocksize))
+        return optcode + optlen + optdata
 
     def mk_optrr(self, msglen):
         """Create EDNS0 OPT RR; see RFC 2671"""
-        ttl   = struct.pack('!BBH', self.ercode, self.version, self.flags)
+        ttl = struct.pack('!BBH', self.ercode, self.version, self.flags)
         if options['nsid']:
             self.rdata += self.mk_nsid()
         if options['expire']:
@@ -148,4 +156,3 @@ class OptRR:
         self.rdlen_packed = struct.pack('!H', self.rdlen)
         return (self.rrname + self.rrtype + self.rrclass + ttl +
                 self.rdlen_packed + self.rdata)
-

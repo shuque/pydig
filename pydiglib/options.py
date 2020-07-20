@@ -1,7 +1,13 @@
-import os, sys, socket, base64
+"""
+Options.
 
-from .common import *
-from .util import *
+"""
+
+import socket
+import base64
+
+from .common import options, ErrorMessage, UsageError, dprint
+from .util import get_default_server, ip2ptr, uid2ownername
 from .tsig import Tsig, read_tsig_params
 
 
@@ -38,10 +44,10 @@ def parse_args(arglist):
 
     qtype = "A"
     qclass = "IN"
-    
-    i=0
+
+    i = 0
     tsig = None
-    
+
     for (i, arg) in enumerate(arglist):
 
         if arg.startswith('@'):
@@ -104,7 +110,7 @@ def parse_args(arglist):
 
         elif arg == "+dnssec":
             options["use_edns"] = True
-            options["dnssec_ok"] = 1; 
+            options["dnssec_ok"] = 1
 
         elif arg == "+hex":
             options["hexrdata"] = True
@@ -127,11 +133,11 @@ def parse_args(arglist):
         elif arg.startswith("+cookie="):
             options["use_edns"] = True
             options["cookie"] = arg[8:]
-            
+
         elif arg.startswith("+subnet="):
             options["use_edns"] = True
             options["subnet"] = arg[8:]
-            
+
         elif arg == "+chainquery":
             options["use_edns"] = True
             options["chainquery"] = True
@@ -185,7 +191,7 @@ def parse_args(arglist):
                 raise ErrorMessage("-y: attempt to re-specify TSIG parameters")
             tsig = options["tsig"] = Tsig()
             alg, name, key = arg[2:].split(":")
-            key = base64.decodestring(key.encode())
+            key = base64.b64decode(key.encode())
             tsig.setkey(name, key, alg)
             options["do_tsig"] = True
 
@@ -220,7 +226,9 @@ def parse_args(arglist):
                 qclass = arglist[i+2].upper()
 
         if options["ptr"]:
-            qname = ip2ptr(qname); qtype = "PTR"; qclass = "IN"
+            qname = ip2ptr(qname)
+            qtype = "PTR"
+            qclass = "IN"
         elif qtype in ['OPENPGPKEY', 'SMIMEA'] and qname.find('@') != -1:
             qname = uid2ownername(qname, qtype)
         elif qtype.startswith("IXFR="):
@@ -231,4 +239,3 @@ def parse_args(arglist):
             qname += "."
 
     return (qname, qtype, qclass)
-
