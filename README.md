@@ -20,7 +20,7 @@ specified with the TYPE123 and CLASS123 syntax.
 
 ```
 $ pydig -h
-pydig (a DNS query tool written in Python), version 1.6.0
+pydig (a DNS query tool written in Python), version 1.6.1
 
 Usage: pydig [list of options] <qname> [<qtype>] [<qclass>]
        pydig @server +walk <zone>
