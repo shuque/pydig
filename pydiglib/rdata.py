@@ -9,7 +9,7 @@ import time
 import base64
 
 from .common import options
-from .dnsparam import qt, rc, edns_opt, sshfp_alg, sshfp_fptype, dnssec_proto, dnssec_alg, dnssec_digest
+from .dnsparam import qt, rc, edns_opt, sshfp_alg, sshfp_fptype, dnssec_proto, dnssec_alg, dnssec_digest, extended_error
 from .name import name_from_wire_message
 from .util import hexdump, bytes2escapedstring, backslash_txt, printables_txt, packed2int
 from .rr_svcb import RdataSVCB
@@ -40,6 +40,13 @@ def print_optrr(rcode, rrclass, ttl, rdata):
                 pass
             if human_readable_data:
                 data_out = '%s (%s)' % (data_out, human_readable_data)
+        elif ocode == 15:                        # Extended DNS Error
+            info_code, = struct.unpack('!H', data_raw[0:2])
+            extra_text = data_raw[2:]
+            info_code_desc = extended_error.get(info_code, "Unknown")
+            data_out = "{} ({})".format(info_code, info_code_desc)
+            if extra_text:
+                data_out += " :{}".format(extra_text)
         print(";; DATA: %s" % data_out)
         blob = blob[4+olen:]
 
