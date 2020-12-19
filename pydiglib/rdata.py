@@ -40,6 +40,8 @@ def print_optrr(rcode, rrclass, ttl, rdata):
                 pass
             if human_readable_data:
                 data_out = '%s (%s)' % (data_out, human_readable_data)
+        elif ocode in [5, 6, 7]:                 # DAU, DHU, NHU
+            data_out = ' '.join([str(x) for x in data_raw])
         elif ocode == 15:                        # Extended DNS Error
             info_code, = struct.unpack('!H', data_raw[0:2])
             extra_text = data_raw[2:]
