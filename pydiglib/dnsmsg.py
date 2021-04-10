@@ -294,7 +294,7 @@ class DNSresponse:
                             decode_rr(self.message, offset, options["hexrdata"])
                     if is_axfr and (secname != "ANSWER"):
                         continue
-                    elif rrtype == 41:
+                    elif not options["generic"] and rrtype == 41:
                         print_optrr(self.rcode, rrclass, ttl, rdata)
                     else:
                         self.print_rr(rrname, ttl, rrtype, rrclass, rdata)
