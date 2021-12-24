@@ -99,19 +99,19 @@ Specific features of TLS depend on the version of Python in use. TLS server
 certificate verification and hostname verification require quite recent
 versions of Python.
 
-HTTPS support requires the "requests" module. If no URL is specified via
-the +https option, then by default Cloudflare's DNS over HTTPS server is
-queried (https://cloudflare-dns.com/dns-query).
+For +https, if no URL is specified, then by default Cloudflare's DNS over
+HTTPS server is queried (https://cloudflare-dns.com/dns-query).
 
 
 # Pre-requisites:
 
 * Python 3
-
+* "requests" module
 
 # Installation:
 
-1. (as root) python3 setup.py install
+1. pip3 install requests (if necessary)
+2. python3 setup.py install
 
 # License
 

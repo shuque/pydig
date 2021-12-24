@@ -170,7 +170,6 @@ options = dict(
     tls_port=DEFAULT_PORT_TLS,
     tls_fallback=False,
     tls_hostname=None,
-    have_https=False,
     https=False,
     https_url=DEFAULT_URL,
 )

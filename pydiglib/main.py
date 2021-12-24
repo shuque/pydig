@@ -60,8 +60,6 @@ def main(args):
     response = None
 
     if options["https"]:
-        if not options["have_https"]:
-            raise ErrorMessage("DNS over HTTPS not supported")
         t1 = time.time()
         responsepkt = send_request_https(request, options["https_url"])
         t2 = time.time()
