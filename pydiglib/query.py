@@ -15,8 +15,20 @@ from .dnsmsg import DNSresponse
 from .tls import get_ssl_context, get_ssl_connection
 
 
+def addresses_match(querier, responder):
+    """check that responder address and port match query"""
+    if responder[0:2] == querier:
+        return True
+    if querier[0] == '0.0.0.0' and responder[0] == '127.0.0.1':
+        return True
+    if querier[0] == '::' and responder[0] == '::1':
+        return True
+    return False
+
+
 def send_request_udp(pkt, host, port, family, itimeout, retries):
     """Send the request via UDP, with retries using exponential backoff"""
+
     response, responder = b"", ("", 0)
     s = socket.socket(family, socket.SOCK_DGRAM)
     if options["srcip"]:
@@ -29,7 +41,12 @@ def send_request_udp(pkt, host, port, family, itimeout, retries):
         s.settimeout(timeout)
         try:
             s.sendto(pkt, (host, port))
-            (response, responder) = s.recvfrom(BUFSIZE)
+            while True:
+                response, responder = s.recvfrom(BUFSIZE)
+                if addresses_match((host, port), responder):
+                    break
+                response = b""
+                dprint(f"UDP response from unexpected source {responder}")
             break
         except socket.timeout:
             timeout = timeout * 2
@@ -124,7 +141,7 @@ def do_axfr(query, pkt, host, port, family):
             lbytes = recvSocket(s, 2)
             if not lbytes:
                 break
-            elif len(lbytes) != 2:
+            if len(lbytes) != 2:
                 raise ErrorMessage("recv() on socket failed.")
             msg_len, = struct.unpack('!H', lbytes)
             msg = recvSocket(s, msg_len)
@@ -135,7 +152,7 @@ def do_axfr(query, pkt, host, port, family):
             response.decode_sections(is_axfr=True)
             rrtotal += response.ancount
 
-    except socket.timeout as e:
+    except socket.timeout:
         pass
     except socket.error as e:
         s.close()
@@ -150,5 +167,3 @@ def do_axfr(query, pkt, host, port, family):
         tsig = options["tsig"]
         print(";; TSIG records: %d, success: %d, failure: %d" %
               (tsig.tsig_total, tsig.verify_success, tsig.verify_failure))
-
-    return

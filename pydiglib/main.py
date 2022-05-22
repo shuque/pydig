@@ -9,7 +9,7 @@ import time
 
 from .common import options, excepthook, dprint, Stats, ErrorMessage, UsageError, ITIMEOUT, RETRIES
 from .options import parse_args
-from .util import random_init, get_socketparams, is_multicast
+from .util import random_init, get_socketparams
 from .dnsparam import qc, qt
 from .dnsmsg import DNSquery, DNSresponse
 from .query import send_request_udp, send_request_tcp, send_request_tls, do_axfr
@@ -99,10 +99,6 @@ def main(args):
         if not response.tc:
             print(";; UDP response from %s, %d bytes, in %.3f sec" %
                   (responder_addr, response.msglen, (t2-t1)))
-            if not is_multicast(server_addr) and \
-               server_addr != "0.0.0.0" and responder_addr[0] != server_addr:
-                print("WARNING: Response from unexpected address %s" %
-                      responder_addr[0])
 
     if options["use_tcp"] or (response and response.tc) \
        or (options["tls"] and options["tls_fallback"] and not response):
