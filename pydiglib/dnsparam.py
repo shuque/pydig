@@ -92,6 +92,7 @@ DICT_RRTYPE = {
     "CDS": 59,
     "CDNSKEY": 60,
     "OPENPGPKEY": 61,
+    "CSYNC": 62,
     "ZONEMD": 63,
     "SVCB": 64,
     "HTTPS": 65,

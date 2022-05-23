@@ -333,6 +333,20 @@ def decode_caa_rdata(rdata):
     return "{} {} \"{}\"".format(flags, tag.decode(), value.decode())
 
 
+def decode_csync_rdata(rdata):
+    """decode CSYNC rdata: serial, flags, type-bitmap; see RFC 7477"""
+    serial, flags = struct.unpack("!IH", rdata[0:6])
+    type_bitmap = rdata[6:]
+    remaining = type_bitmap
+    rrtypelist = []
+    while remaining:
+        windownum, winlen = struct.unpack('BB', remaining[0:2])
+        bitmap = remaining[2:2+winlen]
+        rrtypelist += decode_typebitmap(windownum, bitmap)
+        remaining = remaining[2+winlen:]
+    return "%d %d %s" % (serial, flags, ' '.join(rrtypelist))
+
+
 def decode_rr(pkt, offset, hexrdata):
     """ Decode a resource record, given DNS packet and offset"""
 
@@ -385,6 +399,8 @@ def decode_rr(pkt, offset, hexrdata):
         rdata = decode_tlsa_rdata(rdata)
     elif rrtype == 61:                                       # OPENPGPKEY
         rdata = decode_openpgpkey_rdata(rdata)
+    elif rrtype == 62:                                       # CSYNC
+        rdata = decode_csync_rdata(rdata)
     elif rrtype in [64, 65]:                                 # SVCB, HTTPS
         rdata = RdataSVCB(pkt, offset, rdlen).__str__()
     elif rrtype == 257:                                      # CAA
