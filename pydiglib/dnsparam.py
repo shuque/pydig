@@ -11,7 +11,7 @@ class DNSparam:
 
     def __init__(self, prefix, name2val):
         self.name2val = name2val
-        self.val2name = dict([(y, x) for (x, y) in name2val.items()])
+        self.val2name = { y: x for (x, y) in name2val.items() }
         self.prefix = prefix
         self.prefix_offset = len(prefix)
 
@@ -255,4 +255,7 @@ extended_error = {
     22: "No Reachable Authority",
     23: "Network Error",
     24: "Invalid Data",
+    25: "Signature Expired before Valid",
+    26: "Too Early (QUIC; RFC 9250)",
+    27: "Unsupported NSEC3 Iterations Value",
 }
