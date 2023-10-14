@@ -348,6 +348,13 @@ def decode_csync_rdata(rdata):
     return "%d %d %s" % (serial, flags, ' '.join(rrtypelist))
 
 
+def decode_zonemd_rdata(rdata):
+    """decode ZONEMD rdata: serial, scheme, hashalg, digest; see RFC 8976"""
+    serial, scheme, hashalg = struct.unpack("!IBB", rdata[0:6])
+    digest = rdata[6:]
+    return "%d %d %d %s" % (serial, scheme, hashalg, hexdump(digest))
+
+
 def decode_rr(pkt, offset, hexrdata):
     """ Decode a resource record, given DNS packet and offset"""
 
@@ -402,6 +409,8 @@ def decode_rr(pkt, offset, hexrdata):
         rdata = decode_openpgpkey_rdata(rdata)
     elif rrtype == 62:                                       # CSYNC
         rdata = decode_csync_rdata(rdata)
+    elif rrtype == 63:                                       # ZONEMD
+        rdata = decode_zonemd_rdata(rdata)
     elif rrtype in [64, 65]:                                 # SVCB, HTTPS
         rdata = RdataSVCB(pkt, offset, rdlen).__str__()
     elif rrtype == 257:                                      # CAA
