@@ -5,7 +5,7 @@ import socket
 
 PROGNAME       = os.path.basename(sys.argv[0])
 PROGDESC       = "a DNS query tool written in Python"
-VERSION        = "1.6.4"
+VERSION        = "1.6.5"
 
 PYVERSION      = sys.version_info.major
 RESOLV_CONF    = "/etc/resolv.conf"    # where to find default server

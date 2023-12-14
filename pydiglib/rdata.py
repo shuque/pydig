@@ -411,7 +411,7 @@ def decode_rr(pkt, offset, hexrdata):
         rdata = decode_csync_rdata(rdata)
     elif rrtype == 63:                                       # ZONEMD
         rdata = decode_zonemd_rdata(rdata)
-    elif rrtype in [64, 65]:                                 # SVCB, HTTPS
+    elif rrtype in [64, 65, 65287]:                          # SVCB, HTTPS
         rdata = RdataSVCB(pkt, offset, rdlen).__str__()
     elif rrtype == 257:                                      # CAA
         rdata = decode_caa_rdata(rdata)
