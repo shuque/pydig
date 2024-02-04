@@ -45,6 +45,8 @@ Options:
         +ednsopt=###[:value]      set generic EDNS option
         +bufsize=NN               use EDNS with specified UDP payload size
         +dnssec                   request DNSSEC RRs in response
+        +compactok                set Compact Answers OK EDNS header flag
+        +delegok                  set DELEG OK EDNS header flag
         +hex                      print hexdump of rdata field
         +nsid                     send NSID (Name Server ID) option
         +expire                   send an EDNS Expire option
@@ -145,6 +147,8 @@ options = dict(
     ednsopt=[],
     bufsize=EDNS0_UDPSIZE,
     dnssec_ok=0,
+    compact_ok=False,
+    deleg_ok=False,
     serial=None,                                   # for IXFR queries
     hexrdata=False,
     do_zonewalk=False,

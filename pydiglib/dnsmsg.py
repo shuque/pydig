@@ -124,7 +124,9 @@ class DNSquery:
         Opt = OptRR(options["edns_version"],
                     options["bufsize"],
                     flags=options["edns_flags"],
-                    dnssec_ok=options["dnssec_ok"])
+                    dnssec_ok=options["dnssec_ok"],
+                    compact_ok=options["compact_ok"],
+                    deleg_ok=options["deleg_ok"])
         self.arcount += 1
         self.additional = Opt.mk_optrr(msglen=self.msglen_without_opt)
 

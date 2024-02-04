@@ -112,6 +112,14 @@ def parse_args(arglist):
             options["use_edns"] = True
             options["dnssec_ok"] = 1
 
+        elif arg == "+compactok":
+            options["use_edns"] = True
+            options["compact_ok"] = 1
+
+        elif arg == "+delegok":
+            options["use_edns"] = True
+            options["deleg_ok"] = 1
+
         elif arg == "+hex":
             options["hexrdata"] = True
 

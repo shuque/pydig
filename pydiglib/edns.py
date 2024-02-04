@@ -10,7 +10,7 @@ import math
 
 from .options import options
 from .common import ErrorMessage, EDNS0_UDPSIZE, PAD_BLOCK_SIZE
-from .dnsparam import qt
+from .dnsparam import qt, EdnsFlag
 from .name import name_from_text
 from .util import h2bin
 
@@ -31,17 +31,20 @@ class OptRR:
     rdata = b""
     pad_blocksize = PAD_BLOCK_SIZE
 
-    def __init__(self, version, udpbufsize, flags, dnssec_ok):
+    def __init__(self, version, udpbufsize, flags, dnssec_ok, compact_ok, deleg_ok):
         self.version = version
         self.udpbufsize = udpbufsize
         self.rrclass = struct.pack('!H', udpbufsize)
         self.dnssec_ok = dnssec_ok
         if flags != 0:
             self.flags = flags
-        elif dnssec_ok:
-            self.flags = 0x8000
         else:
-            self.flags = 0x0
+            if dnssec_ok:
+                self.flags |= EdnsFlag.DNSSEC_OK
+            if compact_ok:
+                self.flags |= EdnsFlag.COMPACT_OK
+            if deleg_ok:
+                self.flags |= EdnsFlag.DELEG_OK
         if options["padding_blocksize"]:
             self.pad_blocksize = options["padding_blocksize"]
         return

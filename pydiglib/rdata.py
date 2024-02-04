@@ -22,7 +22,11 @@ def print_optrr(rcode, rrclass, ttl, rdata):
     ercode = (ercode_hi << 4) | rcode
     flags = []
     if z & 0x8000:
-        flags.append("do")                  # DNSSEC OK bit
+        flags.append("do")                  # DNSSEC OK flag
+    if z & 0x4000:
+        flags.append("co")                  # Compact Answers OK flag
+    if z & 0x2000:
+        flags.append("dl")                  # DELEG OK flag
     print(";; OPT: edns_version=%d, udp_payload=%d, flags=%s, ercode=%d(%s)" %
           (version, rrclass, ' '.join(flags), ercode, rc.get_name(ercode)))
     blob = rdata

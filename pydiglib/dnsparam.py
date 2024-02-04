@@ -3,6 +3,7 @@ DNS protocol parameters.
 
 """
 
+import enum
 from .common import options
 
 
@@ -210,6 +211,11 @@ sshfp_fptype = {
     2: "SHA-256",
 }
 
+class EdnsFlag(enum.IntFlag):
+    """EDNS Header Flags"""
+    DNSSEC_OK = 0x8000
+    COMPACT_OK = 0x4000
+    DELEG_OK = 0x2000
 
 # EDNS Options Codes
 edns_opt = {
