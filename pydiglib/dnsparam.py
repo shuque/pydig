@@ -108,6 +108,7 @@ DICT_RRTYPE = {
     "LP": 107,
     "EUI48": 108,
     "EUI64": 109,
+    "NXNAME": 128,
     "TKEY": 249,
     "TSIG": 250,
     "IXFR": 251,

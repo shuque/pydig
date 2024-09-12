@@ -1,7 +1,7 @@
 from distutils.core import setup
 
 setup(name='pydig',
-      version='1.6.5',
+      version='1.6.6',
       scripts=['pydig'],
       description='DNS query tool',
       author='Shumon Huque',
