@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pydig"
+dynamic = ["version"]
+license = "MIT"
+
+authors = [
+    { name = "Shumon Huque", email = "shuque@gmail.com" },
+]
+description = "A DNS query tool in Python"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "requests",
+]
+
+[project.urls]
+Homepage = "https://github.com/shuque/pydig"
+Issues = "https://github.com/shuque/pydig/issues"
+
+[tool.setuptools]
+packages = ["pydiglib"]
+script-files = ['pydig']
+
+[tool.setuptools.dynamic]
+version = {attr = "pydiglib.common.__version__"}

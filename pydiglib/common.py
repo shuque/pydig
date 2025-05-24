@@ -3,9 +3,10 @@ import os
 import sys
 import socket
 
+__version__    = "1.6.7"
+
 PROGNAME       = os.path.basename(sys.argv[0])
 PROGDESC       = "a DNS query tool written in Python"
-VERSION        = "1.6.6"
 
 PYVERSION      = sys.version_info.major
 RESOLV_CONF    = "/etc/resolv.conf"    # where to find default server
@@ -70,7 +71,7 @@ Options:
         +tls_fallback             Fallback from TLS to TCP on TLS failure
         +tls_hostname=name        Check hostname in TLS server certificate
         +https[=url]              use HTTPS transport with optional URL
-""".format(PROGNAME, PROGDESC, VERSION)
+""".format(PROGNAME, PROGDESC, __version__)
 
 
 def dprint(input):
